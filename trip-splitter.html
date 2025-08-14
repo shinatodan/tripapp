@@ -17,7 +17,6 @@
   label{display:block;font-size:13px;margin-top:10px;opacity:.9}
   input,select,button,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #2a376a;background:#0f1530;color:#eef0f6}
   input, select, textarea {font-size: 16px;}
-
   input[type="checkbox"]{width:auto;margin-right:8px}
   .row{display:flex;gap:var(--gap)}
   .row > *{flex:1}
@@ -38,7 +37,6 @@
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   @media(max-width:780px){.grid{grid-template-columns:1fr}}
   .small{font-size:12px}
-
   .calc-wrap{display:grid;grid-template-columns:1fr 240px;gap:14px;align-items:start}
   @media(max-width:1024px){.calc-wrap{grid-template-columns:1fr}}
   .keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -49,23 +47,12 @@
   #keypad{z-index:1}
   @media (max-width: 600px) {
     body {padding: 10px;}
-    input, button {
-        width: 100%;
-        box-sizing: border-box;
-    }
+    input, button { width: 100%; box-sizing: border-box; }
   }
- @media screen and (max-width: 600px) {
-  #txTable th {
-    white-space: nowrap; /* 改行しない */
-    font-size: 12px;     /* 少し小さくする */
-    padding: 4px;
+  @media screen and (max-width: 600px) {
+    #txTable th { white-space: nowrap; font-size: 12px; padding: 4px; }
+    #txTable td { font-size: 12px; padding: 4px; }
   }
-  #txTable td {
-    font-size: 12px;
-    padding: 4px;
-  }
-}
-
   .ghost-btn{display:inline-flex;align-items:center;gap:6px;margin-top:0;padding:6px 10px;border-radius:999px;border:1px dashed #2a376a;background:#0f1530;color:#eef0f6;width:auto}
   .ghost-btn:hover{border-style:solid}
 </style>
@@ -119,7 +106,6 @@
           <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="-">−</button>
           <button data-k="0">0</button><button data-k="00">00</button><button class="op" data-act="equals">=</button><button class="op" data-k="+">＋</button>
           <button class="op wide" data-act="clear">C</button><button class="op wide" data-act="back">⌫</button>
-          
         </div>
       </div>
 
@@ -162,398 +148,278 @@
   </main>
 </div>
 
-<!-- ===== Firebase（ESM via CDN） ===== -->
 <script type="module">
-  /* ----------------- Firebase 初期化 ----------------- */
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-  import {
-    getFirestore, collection, addDoc, getDocs, setDoc, deleteDoc, doc,
-    onSnapshot, serverTimestamp, query, orderBy
-  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, setDoc, deleteDoc, doc,
+  onSnapshot, serverTimestamp, query, orderBy
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-  // ★あなたのプロジェクト設定（そのまま差し替え済み）
-  const firebaseConfig = {
-    apiKey: "AIzaSyDgHVdhx0RwTv6PkzBBNgY8Ouis7yRGwlY",
-    authDomain: "trip-app-eb508.firebaseapp.com",
-    projectId: "trip-app-eb508",
-    storageBucket: "trip-app-eb508.firebasestorage.app",
-    messagingSenderId: "38650349203",
-    appId: "1:38650349203:web:1987ddb1536bca9bbe6f66",
-    measurementId: "G-JBSHND42QP"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyDgHVdhx0RwTv6PkzBBNgY8Ouis7yRGwlY",
+  authDomain: "trip-app-eb508.firebaseapp.com",
+  projectId: "trip-app-eb508",
+  storageBucket: "trip-app-eb508.firebasestorage.app",
+  messagingSenderId: "38650349203",
+  appId: "1:38650349203:web:1987ddb1536bca9bbe6f66",
+  measurementId: "G-JBSHND42QP"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  /* ----------------- アプリ本体 ----------------- */
+const yen = n => (Math.round(n)||0).toLocaleString();
+const byId = id => document.getElementById(id);
+const todayStr = () => new Date().toISOString().slice(0,10);
+function safeEvalToNumber(expr){
+  if(typeof expr !== "string") expr = String(expr||"");
+  expr = expr.replace(/×/g, "*").replace(/÷/g, "/");
+  const trimmed = expr.replace(/\s+/g, "");
+  if(!trimmed) return NaN;
+  if(!/^[0-9+\-*/().]+$/.test(trimmed)) return NaN;
+  try{
+    const val = Function(`"use strict";return (${trimmed});`)();
+    const num = Number(val);
+    return Number.isFinite(num) ? Math.round(num) : NaN;
+  }catch(e){ return NaN; }
+}
+function pill(v){ const c=v>=0?"plus":"minus"; return `<span class="pill ${c}">${(v>=0?"+":"")}${yen(v)}</span>`; }
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m])); }
 
-  // 共通ユーティリティ
-  const yen = n => (Math.round(n)||0).toLocaleString();
-  const byId = id => document.getElementById(id);
-  const todayStr = () => new Date().toISOString().slice(0,10);
+const tripSelect = byId("tripSelect");
+const newTripName = byId("newTripName");
+const createTripBtn = byId("createTripBtn");
+const memberName = byId("memberName");
+const addMemberBtn = byId("addMemberBtn");
+const membersDiv = byId("members");
+const deleteTripBtn = byId("deleteTripBtn");
 
-  function safeEvalToNumber(expr){
-    if(typeof expr !== "string") expr = String(expr||"");
-    expr = expr.replace(/×/g, "*").replace(/÷/g, "/");
-    const trimmed = expr.replace(/\s+/g, "");
-    if(!trimmed) return NaN;
-    if(!/^[0-9+\-*/().]+$/.test(trimmed)) return NaN;
-    try{
-      const val = Function(`"use strict";return (${trimmed});`)();
-      const num = Number(val);
-      return Number.isFinite(num) ? Math.round(num) : NaN;
-    }catch(e){ return NaN; }
-  }
-  function pill(v){ const c=v>=0?"plus":"minus"; return `<span class="pill ${c}">${(v>=0?"+":"")}${yen(v)}</span>`; }
-  function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m])); }
+const txDesc = byId("txDesc");
+const txAmount = byId("txAmount");
+const keypad = byId("keypad");
+const txPayer = byId("txPayer");
+const beneficiariesDiv = byId("beneficiaries");
+const addTxBtn = byId("addTxBtn");
+const clearFormBtn = byId("clearFormBtn");
 
-  // UI参照
-  const tripSelect = byId("tripSelect");
-  const newTripName = byId("newTripName");
-  const createTripBtn = byId("createTripBtn");
-  const memberName = byId("memberName");
-  const addMemberBtn = byId("addMemberBtn");
-  const membersDiv = byId("members");
-  const deleteTripBtn = byId("deleteTripBtn");
+const txTableBody = document.querySelector("#txTable tbody");
+const resultBody = document.querySelector("#resultTable tbody");
 
-  const txDesc = byId("txDesc");
-  const txDate = byId("txDate");
-  const openDatePickerBtn = byId("openDatePickerBtn");
-  const todayLabel = byId("todayLabel");
+let tripsUnsub = null;
+let currentTripUnsub = null;
+let tripsIndex = [];
+let currentTripId = null;
+let currentTripData = null;
 
-  const txAmount = byId("txAmount");
-  const keypad = byId("keypad");
-  const txPayer = byId("txPayer");
-  const beneficiariesDiv = byId("beneficiaries");
-  const addTxBtn = byId("addTxBtn");
-  const clearFormBtn = byId("clearFormBtn");
+init();
 
-  const txTableBody = document.querySelector("#txTable tbody");
-  const resultBody = document.querySelector("#resultTable tbody");
-  const sumFair = byId("sumFair"), sumPaid = byId("sumPaid"), sumDelta = byId("sumDelta");
+async function init(){
+  // 日付入力なし → null チェック不要
+  subscribeTrips();
+}
 
-  // Firestore 状態
-  let tripsUnsub = null;        // trips一覧購読の解除関数
-  let currentTripUnsub = null;  // 選択中旅行ドキュメント購読の解除関数
-  let tripsIndex = [];          // [{id,name,createdAt}] UI用一覧
-  let currentTripId = null;     // 選択中ID
-  let currentTripData = null;   // {name, members[], tx[]}
-
-  // 初期化：一覧購読 → 最初の旅行を自動選択
-  init();
-
-  async function init(){
-    todayLabel.textContent = todayStr();
-    txDate.value ||= todayStr();
-    subscribeTrips();
-  }
-
-  function subscribeTrips(){
-    if(tripsUnsub) tripsUnsub();
-
-    const q = query(collection(db,"trips"), orderBy("createdAt","asc"));
-    tripsUnsub = onSnapshot(q, (snap)=>{
-      tripsIndex = snap.docs.map(d=>({
-        id: d.id,
-        name: d.data().name || "(無題)",
-        createdAt: d.data().createdAt?.toDate?.() || null
-      }));
-      renderTripSelect();
-
-      // 初回や削除後などで current 未選択なら先頭を選ぶ
-      if(!currentTripId && tripsIndex[0]){
-        selectTrip(tripsIndex[0].id);
-      }else if(currentTripId && !tripsIndex.find(t=>t.id===currentTripId)){
-        // 現在の旅行が一覧から消えた（削除された）→先頭へ
-        currentTripId = null;
-        if(tripsIndex[0]) selectTrip(tripsIndex[0].id);
-        else clearMainViews();
-      }
-    });
-  }
-
-  function clearMainViews(){
-    membersDiv.innerHTML = "";
-    beneficiariesDiv.innerHTML = "";
-    txTableBody.innerHTML = "";
-    resultBody.innerHTML = "";
-    sumFair.textContent = "0"; sumPaid.textContent = "0"; sumDelta.textContent = "0";
-    txPayer.innerHTML = "";
-  }
-
-  function renderTripSelect(){
-    tripSelect.innerHTML = "";
-    tripsIndex.forEach(t=>{
-      const opt = document.createElement("option");
-      opt.value = t.id;
-      opt.textContent = t.name;
-      if(t.id===currentTripId) opt.selected = true;
-      tripSelect.appendChild(opt);
-    });
-  }
-
-  function selectTrip(id){
-    currentTripId = id;
-    tripSelect.value = id;
-    subscribeCurrentTrip(id);
-  }
-
-  function subscribeCurrentTrip(id){
-    if(currentTripUnsub) currentTripUnsub();
-
-    const ref = doc(db,"trips",id);
-    currentTripUnsub = onSnapshot(ref, (d)=>{
-      if(!d.exists()){
-        currentTripData = null;
-        clearMainViews();
-        return;
-      }
-      currentTripData = d.data();
-      renderMembers();
-      renderPayerAndBen();
-      renderTx();
-      renderResults();
-    });
-  }
-
-  // --------- レンダリング ----------
-  function renderMembers(){
-    if(!currentTripData) return;
-    const members = currentTripData.members || [];
-    membersDiv.innerHTML = "";
-    members.forEach(m=>{
-      const span = document.createElement("span");
-      span.className = "chip";
-      span.textContent = m;
-      const x = document.createElement("button");
-      x.textContent = "×"; x.className = "btn small"; x.style.width="auto";
-      x.onclick = ()=> removeMember(m);
-      span.appendChild(x);
-      membersDiv.appendChild(span);
-    });
-  }
-
-  function renderPayerAndBen(){
-    if(!currentTripData) return;
-    const members = currentTripData.members || [];
-    // 支払者
-    txPayer.innerHTML = "";
-    members.forEach(m=>{
-      const opt = document.createElement("option");
-      opt.value = m; opt.textContent = m;
-      txPayer.appendChild(opt);
-    });
-    // 恩恵者
-    beneficiariesDiv.innerHTML = "";
-    members.forEach(m=>{
-      const label = document.createElement("label");
-      label.className = "chip";
-      const cb = document.createElement("input");
-      cb.type = "checkbox"; cb.value = m; cb.checked = true;
-      label.appendChild(cb);
-      label.append(" "+m);
-      beneficiariesDiv.appendChild(label);
-    });
-  }
-
-  function renderTx(){
-    if(!currentTripData) return;
-    const tx = (currentTripData.tx || []).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||""));
-    txTableBody.innerHTML = "";
-    tx.forEach(t=>{
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${t.date||""}</td>
-        <td>${escapeHtml(t.desc||"")}</td>
-        <td class="right">${yen(t.amount)}</td>
-        <td>${t.payer}</td>
-        <td>${(t.ben||[]).join(", ")}</td>
-        <td><button class="btn small danger" data-del="${t.id}">削除</button></td>
-      `;
-      txTableBody.appendChild(tr);
-    });
-    // 削除ボタン委譲
-    txTableBody.onclick = (e)=>{
-      const btn = e.target.closest("button[data-del]");
-      if(btn) deleteTx(btn.dataset.del);
-    };
-  }
-
-  function renderResults(){
-    if(!currentTripData) return;
-    const members = currentTripData.members || [];
-    const tx = currentTripData.tx || [];
-    const fair = Object.fromEntries(members.map(m=>[m,0]));
-    const paid = Object.fromEntries(members.map(m=>[m,0]));
-    for(const t of tx){
-      const amount = Number(t.amount)||0;
-      paid[t.payer] = (paid[t.payer]||0) + amount;
-      const ben = (t.ben||[]).filter(b=>members.includes(b));
-      const share = ben.length ? amount / ben.length : 0;
-      for(const b of ben){ fair[b] = (fair[b]||0) + share; }
+function subscribeTrips(){
+  if(tripsUnsub) tripsUnsub();
+  const q = query(collection(db,"trips"), orderBy("createdAt","asc"));
+  tripsUnsub = onSnapshot(q, (snap)=>{
+    tripsIndex = snap.docs.map(d=>({ id:d.id, name:d.data().name||"(無題)", createdAt:d.data().createdAt?.toDate?.()||null }));
+    renderTripSelect();
+    if(!currentTripId && tripsIndex[0]) selectTrip(tripsIndex[0].id);
+    else if(currentTripId && !tripsIndex.find(t=>t.id===currentTripId)){
+      currentTripId = null;
+      if(tripsIndex[0]) selectTrip(tripsIndex[0].id);
+      else clearMainViews();
     }
-    resultBody.innerHTML = "";
-    let sFair=0, sPaid=0, sDelta=0;
-    members.forEach(m=>{
-      const f = Math.round(fair[m]||0);
-      const p = Math.round(paid[m]||0);
-      const d = f - p;
-      sFair+=f; sPaid+=p; sDelta+=d;
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${m}</td>
-        <td class="right">${yen(f)}</td>
-        <td class="right">${yen(p)}</td>
-        <td class="right">${pill(d)}</td>
-      `;
-      resultBody.appendChild(tr);
-    });
-    sumFair.textContent = yen(sFair);
-    sumPaid.textContent = yen(sPaid);
-    sumDelta.textContent = yen(sDelta);
-  }
-
-  // --------- Firestore Write ヘルパ ----------
-  async function fsCreateTrip(name){
-    const ref = await addDoc(collection(db,"trips"), {
-      name: name || "新しい旅行",
-      members: [],
-      tx: [],
-      createdAt: serverTimestamp()
-    });
-    return ref.id;
-  }
-  async function fsUpdateTrip(partial){
-    if(!currentTripId) return;
-    const data = {
-      ...(currentTripData||{}),
-      ...partial
-    };
-    await setDoc(doc(db,"trips",currentTripId), data, { merge:true });
-  }
-  async function fsDeleteTrip(id){
-    await deleteDoc(doc(db,"trips",id));
-  }
-
-  // --------- 操作 ----------
-  createTripBtn.onclick = async ()=>{
-    const name = (newTripName.value||"").trim();
-    const id = await fsCreateTrip(name);
-    newTripName.value = "";
-    selectTrip(id);
-  };
-
-  tripSelect.onchange = ()=>{
-    const id = tripSelect.value;
-    selectTrip(id);
-  };
-
-  addMemberBtn.onclick = async ()=>{
-    if(!currentTripData) return;
-    const nm = (memberName.value||"").trim();
-    if(!nm) return;
-    const members = currentTripData.members || [];
-    if(members.includes(nm)) return alert("同名メンバーがいます");
-    await fsUpdateTrip({ members: [...members, nm] });
-    memberName.value="";
-  };
-
-  async function removeMember(nm){
-    if(!currentTripData) return;
-    if(!confirm(nm+" をメンバーから外しますか？（支出の履歴は残ります）")) return;
-    const members = (currentTripData.members||[]).filter(x=>x!==nm);
-    // 既存の支出の ben/payer に残っていてもOK（履歴は残す方針）
-    await fsUpdateTrip({ members });
-  }
-
-  // 電卓の表示制御
-  function showKeypad(){ keypad.classList.remove("hidden"); }
-  function hideKeypad(){ keypad.classList.add("hidden"); }
-  txAmount.addEventListener("focus", showKeypad);
-  txAmount.addEventListener("input", showKeypad);
-  txAmount.addEventListener("keydown", (e)=>{
-    if(e.key==="Escape"){ hideKeypad(); }
-    if(e.key==="Enter"){ e.preventDefault(); calcAndFill(); }
   });
-  document.addEventListener("click", (e)=>{
-    const within = e.target.closest("#keypad") || e.target.closest("#txAmount");
-    if(!within){ hideKeypad(); }
+}
+
+function clearMainViews(){
+  membersDiv.innerHTML = "";
+  beneficiariesDiv.innerHTML = "";
+  txTableBody.innerHTML = "";
+  resultBody.innerHTML = "";
+  txPayer.innerHTML = "";
+}
+
+function renderTripSelect(){
+  tripSelect.innerHTML = "";
+  tripsIndex.forEach(t=>{
+    const opt = document.createElement("option");
+    opt.value = t.id; opt.textContent = t.name;
+    if(t.id===currentTripId) opt.selected=true;
+    tripSelect.appendChild(opt);
   });
-  document.querySelectorAll("#keypad button[data-k]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      txAmount.value += btn.dataset.k;
-      txAmount.focus();
-    });
+}
+
+function selectTrip(id){
+  currentTripId = id;
+  tripSelect.value = id;
+  subscribeCurrentTrip(id);
+}
+
+function subscribeCurrentTrip(id){
+  if(currentTripUnsub) currentTripUnsub();
+  const ref = doc(db,"trips",id);
+  currentTripUnsub = onSnapshot(ref, (d)=>{
+    if(!d.exists()){ currentTripData=null; clearMainViews(); return; }
+    currentTripData = d.data();
+    renderMembers();
+    renderPayerAndBen();
+    renderTx();
+    renderResults();
   });
-  document.querySelectorAll("#keypad button[data-act]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const act = btn.dataset.act;
-      if(act==="clear"){ txAmount.value=""; }
-      else if(act==="back"){ txAmount.value = txAmount.value.slice(0,-1); }
-      else if(act==="equals"){ calcAndFill(); }
-      txAmount.focus();
-    });
+}
+
+function renderMembers(){
+  if(!currentTripData) return;
+  const members = currentTripData.members||[];
+  membersDiv.innerHTML="";
+  members.forEach(m=>{
+    const span=document.createElement("span");
+    span.className="chip"; span.textContent=m;
+    const x=document.createElement("button"); x.textContent="×"; x.className="btn small"; x.style.width="auto";
+    x.onclick=()=>removeMember(m);
+    span.appendChild(x);
+    membersDiv.appendChild(span);
   });
-  function calcAndFill(){
-    const v = txAmount.value;
-    const num = safeEvalToNumber(v);
-    if(Number.isNaN(num)){
-      alert("式が正しくありません。使える記号：0-9 + - × ÷ * / . ( )");
-      return;
-    }
-    txAmount.value = String(num);
-    hideKeypad();
+}
+
+function renderPayerAndBen(){
+  if(!currentTripData) return;
+  const members = currentTripData.members||[];
+  txPayer.innerHTML="";
+  members.forEach(m=>{ const opt=document.createElement("option"); opt.value=m; opt.textContent=m; txPayer.appendChild(opt); });
+  beneficiariesDiv.innerHTML="";
+  members.forEach(m=>{
+    const label=document.createElement("label"); label.className="chip";
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=m; cb.checked=true;
+    label.appendChild(cb);
+    label.append(" "+m);
+    beneficiariesDiv.appendChild(label);
+  });
+}
+
+function renderTx(){
+  if(!currentTripData) return;
+  const tx = (currentTripData.tx||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  txTableBody.innerHTML="";
+  tx.forEach(t=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${t.date||""}</td>
+      <td>${escapeHtml(t.desc||"")}</td>
+      <td class="right">${yen(t.amount)}</td>
+      <td>${t.payer}</td>
+      <td>${(t.ben||[]).join(", ")}</td>
+      <td><button class="btn small danger" data-del="${t.id}">削除</button></td>
+    `;
+    txTableBody.appendChild(tr);
+  });
+  txTableBody.onclick=(e)=>{
+    const btn=e.target.closest("button[data-del]");
+    if(btn) deleteTx(btn.dataset.del);
+  };
+}
+
+function renderResults(){
+  if(!currentTripData) return;
+  const members=currentTripData.members||[];
+  const tx=currentTripData.tx||[];
+  const fair=Object.fromEntries(members.map(m=>[m,0]));
+  const paid=Object.fromEntries(members.map(m=>[m,0]));
+  for(const t of tx){
+    const amount=Number(t.amount)||0;
+    paid[t.payer]=(paid[t.payer]||0)+amount;
+    const ben=(t.ben||[]).filter(b=>members.includes(b));
+    const share=ben.length?amount/ben.length:0;
+    for(const b of ben){ fair[b]=(fair[b]||0)+share; }
   }
+  resultBody.innerHTML="";
+  members.forEach(m=>{
+    const f=Math.round(fair[m]||0);
+    const p=Math.round(paid[m]||0);
+    const d=f-p;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${m}</td><td class="right">${yen(f)}</td><td class="right">${yen(p)}</td><td class="right">${pill(d)}</td>`;
+    resultBody.appendChild(tr);
+  });
+}
 
-  // 支出登録
-  addTxBtn.onclick = async ()=>{
-    if(!currentTripData) return;
-    if(!/^\d+$/.test(txAmount.value.trim())){
-      calcAndFill();
-      if(!/^\d+$/.test(txAmount.value.trim())) return;
-    }
-    const amount = Number(txAmount.value||0);
-    const payer = txPayer.value;
-    const ben = Array.from(beneficiariesDiv.querySelectorAll("input[type=checkbox]:checked")).map(x=>x.value);
-    if(!amount || amount<=0) return alert("金額を入れてください");
-    if(!payer) return alert("支払者を選んでください");
-    if(!ben.length) return alert("サービスを受けた人を1人以上選んでください");
+// Firestore操作
+async function fsCreateTrip(name){
+  const ref=await addDoc(collection(db,"trips"),{ name:name||"新しい旅行", members:[], tx:[], createdAt:serverTimestamp() });
+  return ref.id;
+}
+async function fsUpdateTrip(partial){
+  if(!currentTripId) return;
+  const data={ ...(currentTripData||{}), ...partial };
+  await setDoc(doc(db,"trips",currentTripId), data, { merge:true });
+}
+async function fsDeleteTrip(id){ await deleteDoc(doc(db,"trips",id)); }
 
-    const tx = currentTripData.tx || [];
-    const row = {
-      id: crypto.randomUUID(),
-      date: txDate.value || todayStr(),
-      desc: (txDesc.value||"").trim(),
-      amount, payer, ben
-    };
-    await fsUpdateTrip({ tx: [...tx, row] });
+// 操作
+createTripBtn.onclick=async ()=>{
+  const name=(newTripName.value||"").trim();
+  if(!name) return;
+  const id=await fsCreateTrip(name);
+  newTripName.value="";
+  selectTrip(id);
+};
 
-    txDesc.value=""; txAmount.value="";
-  };
+addMemberBtn.onclick=async ()=>{
+  const name=(memberName.value||"").trim();
+  if(!name) return;
+  const members=[...(currentTripData.members||[])];
+  if(members.includes(name)) return alert("すでに存在します");
+  members.push(name);
+  await fsUpdateTrip({ members });
+  memberName.value="";
+};
 
-  // 支出削除
-  async function deleteTx(id){
-    if(!currentTripData) return;
-    const row = (currentTripData.tx||[]).find(x=>x.id===id);
-    if(!row) return;
-    if(!confirm(`「${row.desc||""} / ${row.amount}円」を削除しますか？`)) return;
-    const next = (currentTripData.tx||[]).filter(x=>x.id!==id);
-    await fsUpdateTrip({ tx: next });
+async function removeMember(name){
+  if(!currentTripData) return;
+  const members=(currentTripData.members||[]).filter(m=>m!==name);
+  const tx=(currentTripData.tx||[]).map(t=>{
+    if(t.payer===name) t.payer="";
+    if(t.ben) t.ben=t.ben.filter(b=>b!==name);
+    return t;
+  });
+  await fsUpdateTrip({ members, tx });
+}
+
+deleteTripBtn.onclick=async ()=>{
+  if(!currentTripId) return;
+  if(confirm("本当に削除しますか？")) await fsDeleteTrip(currentTripId);
+};
+
+addTxBtn.onclick=async ()=>{
+  if(!currentTripData) return;
+  if(!/^\d+$/.test(txAmount.value.trim())){
+    const val=safeEvalToNumber(txAmount.value);
+    if(!Number.isFinite(val)) return;
+    txAmount.value=Math.round(val);
   }
+  const amount=Number(txAmount.value||0);
+  const payer=txPayer.value;
+  const ben=Array.from(beneficiariesDiv.querySelectorAll("input[type=checkbox]:checked")).map(x=>x.value);
+  if(!amount || amount<=0) return alert("金額を入れてください");
+  if(!payer) return alert("支払者を選んでください");
+  if(!ben.length) return alert("サービスを受けた人を1人以上選んでください");
 
-  // 旅行削除
-  deleteTripBtn.onclick = async ()=>{
-    if(!currentTripId) return alert("削除できる旅行がありません");
-    const name = tripsIndex.find(t=>t.id===currentTripId)?.name || "(無題)";
-    if(!confirm(`旅行「${name}」を削除しますか？`)) return;
-    await fsDeleteTrip(currentTripId);
-  };
+  const tx=currentTripData.tx||[];
+  const row={ id:crypto.randomUUID(), date:todayStr(), desc:(txDesc.value||"").trim(), amount, payer, ben };
+  await fsUpdateTrip({ tx:[...tx,row] });
 
-  // 入力クリア
-  clearFormBtn.onclick = ()=>{
-    txDesc.value=""; txAmount.value=""; txDate.value=todayStr();
-  };
+  txDesc.value=""; txAmount.value="";
+};
 
+clearFormBtn.onclick=()=>{ txDesc.value=""; txAmount.value=""; };
+
+function deleteTx(id){
+  if(!currentTripData) return;
+  const tx=(currentTripData.tx||[]).filter(t=>t.id!==id);
+  fsUpdateTrip({ tx });
+}
 </script>
 </body>
 </html>
