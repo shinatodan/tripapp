@@ -144,7 +144,7 @@
       <h2>支出一覧</h2>
       <table id="txTable">
         <thead>
-          <tr><th>日付</th><th>説明</th><th class="right">金額</th><th>支払者</th><th>恩恵者</th><th></th></tr>
+          <tr><th>説明</th><th class="right">金額</th><th>支払者</th><th>恩恵者</th><th></th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -466,14 +466,6 @@
     await fsUpdateTrip({ members });
   }
 
-  // 日付ピッカー
-  openDatePickerBtn.addEventListener("click", ()=>{
-    try{
-      if(typeof txDate.showPicker === "function"){ txDate.showPicker(); }
-      else { txDate.focus(); }
-    }catch(e){ txDate.focus(); }
-  });
-
   // 電卓の表示制御
   function showKeypad(){ keypad.classList.remove("hidden"); }
   function hideKeypad(){ keypad.classList.add("hidden"); }
@@ -555,7 +547,6 @@
     const name = tripsIndex.find(t=>t.id===currentTripId)?.name || "(無題)";
     if(!confirm(`旅行「${name}」を削除しますか？`)) return;
     await fsDeleteTrip(currentTripId);
-    // 一覧購読が更新され、selectTripは subscribeTrips 側で自動処理
   };
 
   // 入力クリア
@@ -563,24 +554,6 @@
     txDesc.value=""; txAmount.value=""; txDate.value=todayStr();
   };
 
-  /* ---- 初回データ（空の場合だけ）を作りたい場合は以下を有効化 ----
-  window.addEventListener('load', async ()=>{
-    const snap = await getDocs(collection(db,"trips"));
-    if(snap.empty){
-      const id = await fsCreateTrip("デモ（5人：A,B,C,D,E）");
-      // デモの中身を1回だけ書き込む
-      await setDoc(doc(db,"trips",id), {
-        members: ["A","B","C","D","E"],
-        tx: [
-          {id:crypto.randomUUID(), date: todayStr(), desc:"銭湯", amount:1300*5, payer:"A", ben:["A","B","C","D","E"]},
-          {id:crypto.randomUUID(), date: todayStr(), desc:"宿代", amount:50000, payer:"A", ben:["A","B","C","D","E"]},
-          {id:crypto.randomUUID(), date: todayStr(), desc:"ジュース", amount:700*2, payer:"C", ben:["A","B"]},
-        ]
-      }, { merge:true });
-      selectTrip(id);
-    }
-  });
-  */
 </script>
 </body>
 </html>
