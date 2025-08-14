@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>旅行清算アプリ（Firestore 共有版）</title>
 <style>
   * { box-sizing: border-box; }
@@ -16,6 +16,8 @@
   .card h2{font-size:16px;margin:0 0 8px 0}
   label{display:block;font-size:13px;margin-top:10px;opacity:.9}
   input,select,button,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #2a376a;background:#0f1530;color:#eef0f6}
+  input, select, textarea {font-size: 16px;}
+
   input[type="checkbox"]{width:auto;margin-right:8px}
   .row{display:flex;gap:var(--gap)}
   .row > *{flex:1}
@@ -45,7 +47,13 @@
   .keypad button.wide{grid-column:span 2}
   .keypad.hidden{display:none}
   #keypad{z-index:1}
-
+  @media (max-width: 600px) {
+    body {padding: 10px;}
+    input, button {
+        width: 100%;
+        box-sizing: border-box;
+    }
+  }
   .ghost-btn{display:inline-flex;align-items:center;gap:6px;margin-top:0;padding:6px 10px;border-radius:999px;border:1px dashed #2a376a;background:#0f1530;color:#eef0f6;width:auto}
   .ghost-btn:hover{border-style:solid}
 </style>
