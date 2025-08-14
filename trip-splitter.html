@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<title>旅行清算アプリ（Firestore 共有版）</title>
+<title>旅行清算アプリ</title>
 <style>
   * { box-sizing: border-box; }
   :root{--gap:12px;--radius:10px}
@@ -54,6 +54,18 @@
         box-sizing: border-box;
     }
   }
+ @media screen and (max-width: 600px) {
+  #txTable th {
+    white-space: nowrap; /* 改行しない */
+    font-size: 12px;     /* 少し小さくする */
+    padding: 4px;
+  }
+  #txTable td {
+    font-size: 12px;
+    padding: 4px;
+  }
+}
+
   .ghost-btn{display:inline-flex;align-items:center;gap:6px;margin-top:0;padding:6px 10px;border-radius:999px;border:1px dashed #2a376a;background:#0f1530;color:#eef0f6;width:auto}
   .ghost-btn:hover{border-style:solid}
 </style>
@@ -115,11 +127,9 @@
           <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="÷">÷</button>
           <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="×">×</button>
           <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="-">−</button>
-          <button data-k="0">0</button><button data-k="00">00</button><button data-k=".">.</button><button class="op" data-k="+">＋</button>
-          <button class="op" data-k="(">(</button><button class="op" data-k=")">)</button>
-          <button class="op wide" data-act="back">⌫</button>
-          <button class="op" data-act="clear">C</button>
-          <button class="op" data-act="equals">=</button>
+          <button data-k="0">0</button><button data-k="00">00</button><button class="op" data-act="equals">=</button><button class="op" data-k="+">＋</button>
+          <button class="op wide" data-act="clear">C</button><button class="op wide" data-act="back">⌫</button>
+          
         </div>
       </div>
 
@@ -154,7 +164,7 @@
       <h2>結果</h2>
       <table id="resultTable">
         <thead>
-          <tr><th>名前</th><th class="right">本来の使用額</th><th class="right">実際の支払額</th><th class="right">+勝ち／-負け</th></tr>
+          <tr><th>名前</th><th class="right">使用額</th><th class="right">支払額</th><th class="right">勝敗</th></tr>
         </thead>
         <tbody></tbody>
         <tfoot>
