@@ -15,8 +15,7 @@
   .card{background:#121833;border:1px solid #1e2646;border-radius:var(--radius);padding:16px}
   .card h2{font-size:16px;margin:0 0 8px 0}
   label{display:block;font-size:13px;margin-top:10px;opacity:.9}
-  input,select,button,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #2a376a;background:#0f1530;color:#eef0f6}
-  input, select, textarea {font-size: 16px;}
+  input,select,button,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #2a376a;background:#0f1530;color:#eef0f6;font-size:16px;}
   input[type="checkbox"]{width:auto;margin-right:8px}
   .row{display:flex;gap:var(--gap)}
   .row > *{flex:1}
@@ -37,20 +36,6 @@
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   @media(max-width:780px){.grid{grid-template-columns:1fr}}
   .small{font-size:12px}
-  .calc-wrap{display:grid;grid-template-columns:1fr 240px;gap:14px;align-items:start}
-  @media(max-width:1024px){.calc-wrap{grid-template-columns:1fr}}
-  .keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-  .keypad button{padding:12px;border-radius:10px;border:1px solid #2a376a;background:#0f1530;color:#eef0f6;font-size:15px}
-  .keypad button.op{background:#101a3e}
-  .keypad button.wide{grid-column:span 2}
-  .keypad.hidden{display:none}
-  #keypad{z-index:1}
-  @media (max-width: 600px) {
-    body {padding: 10px;}
-    input, button { width: 100%; box-sizing: border-box; }
-  }
-  .ghost-btn{display:inline-flex;align-items:center;gap:6px;margin-top:0;padding:6px 10px;border-radius:999px;border:1px dashed #2a376a;background:#0f1530;color:#eef0f6;width:auto}
-  .ghost-btn:hover{border-style:solid}
 </style>
 </head>
 <body>
@@ -82,7 +67,6 @@
   <main>
     <section class="card">
       <h2>支出を追加</h2>
-
       <div class="grid">
         <div>
           <label for="txDesc">説明</label>
@@ -90,30 +74,20 @@
         </div>
       </div>
 
-      <div class="calc-wrap" style="margin-top:10px">
+      <div class="grid" style="margin-top:10px">
         <div>
           <label for="txAmount">金額（円）</label>
           <input id="txAmount" type="text" inputmode="decimal" placeholder="例：6500" />
         </div>
-
-        <div id="keypad" class="keypad hidden" aria-label="電卓">
-          <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="÷">÷</button>
-          <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="×">×</button>
-          <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="-">−</button>
-          <button data-k="0">0</button><button data-k="00">00</button><button class="op" data-act="equals">=</button><button class="op" data-k="+">＋</button>
-          <button class="op wide" data-act="clear">C</button><button class="op wide" data-act="back">⌫</button>
-        </div>
-      </div>
-
-      <div class="grid" style="margin-top:10px">
         <div>
           <label for="txPayer">支払者</label>
           <select id="txPayer"></select>
         </div>
-        <div>
-          <label>サービスを受けた人</label>
-          <div id="beneficiaries" class="chips"></div>
-        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>サービスを受けた人</label>
+        <div id="beneficiaries" class="chips"></div>
       </div>
 
       <div class="row" style="margin-top:10px">
@@ -164,140 +138,122 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const yen = n => (Math.round(n)||0).toLocaleString();
-const byId = id => document.getElementById(id);
-const todayStr = () => new Date().toISOString().slice(0,10);
-function safeEvalToNumber(expr){
-  if(typeof expr !== "string") expr = String(expr||"");
-  expr = expr.replace(/×/g, "*").replace(/÷/g, "/");
-  const trimmed = expr.replace(/\s+/g, "");
-  if(!trimmed) return NaN;
-  if(!/^[0-9+\-*/().]+$/.test(trimmed)) return NaN;
-  try{
-    const val = Function(`"use strict";return (${trimmed});`)();
-    const num = Number(val);
-    return Number.isFinite(num) ? Math.round(num) : NaN;
-  }catch(e){ return NaN; }
-}
-function pill(v){ const c=v>=0?"plus":"minus"; return `<span class="pill ${c}">${(v>=0?"+":"")}${yen(v)}</span>`; }
-function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m])); }
+// ユーティリティ
+const byId=id=>document.getElementById(id);
+const yen=n=>Math.round(n||0).toLocaleString();
+const escapeHtml=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
 
-const tripSelect = byId("tripSelect");
-const newTripName = byId("newTripName");
-const createTripBtn = byId("createTripBtn");
-const memberName = byId("memberName");
-const addMemberBtn = byId("addMemberBtn");
-const membersDiv = byId("members");
-const deleteTripBtn = byId("deleteTripBtn");
+const tripSelect=byId("tripSelect");
+const newTripName=byId("newTripName");
+const createTripBtn=byId("createTripBtn");
+const memberName=byId("memberName");
+const addMemberBtn=byId("addMemberBtn");
+const membersDiv=byId("members");
+const deleteTripBtn=byId("deleteTripBtn");
+const txDesc=byId("txDesc");
+const txAmount=byId("txAmount");
+const txPayer=byId("txPayer");
+const beneficiariesDiv=byId("beneficiaries");
+const addTxBtn=byId("addTxBtn");
+const clearFormBtn=byId("clearFormBtn");
+const txTableBody=document.querySelector("#txTable tbody");
+const resultBody=document.querySelector("#resultTable tbody");
 
-const txDesc = byId("txDesc");
-const txAmount = byId("txAmount");
-const keypad = byId("keypad");
-const txPayer = byId("txPayer");
-const beneficiariesDiv = byId("beneficiaries");
-const addTxBtn = byId("addTxBtn");
-const clearFormBtn = byId("clearFormBtn");
+// Firestore 状態
+let tripsUnsub=null, currentTripUnsub=null;
+let tripsIndex=[], currentTripId=null, currentTripData=null;
 
-const txTableBody = document.querySelector("#txTable tbody");
-const resultBody = document.querySelector("#resultTable tbody");
-
-let tripsUnsub = null;
-let currentTripUnsub = null;
-let tripsIndex = [];
-let currentTripId = null;
-let currentTripData = null;
-
+// 初期化
 init();
-
-async function init(){
-  // 日付入力なし → null チェック不要
+function init(){
   subscribeTrips();
 }
 
+// 旅行一覧購読
 function subscribeTrips(){
   if(tripsUnsub) tripsUnsub();
-  const q = query(collection(db,"trips"), orderBy("createdAt","asc"));
-  tripsUnsub = onSnapshot(q, (snap)=>{
-    tripsIndex = snap.docs.map(d=>({ id:d.id, name:d.data().name||"(無題)", createdAt:d.data().createdAt?.toDate?.()||null }));
+  const q=query(collection(db,"trips"),orderBy("createdAt","asc"));
+  tripsUnsub=onSnapshot(q,snap=>{
+    tripsIndex=snap.docs.map(d=>({id:d.id,name:d.data().name||"(無題)"}));
     renderTripSelect();
     if(!currentTripId && tripsIndex[0]) selectTrip(tripsIndex[0].id);
     else if(currentTripId && !tripsIndex.find(t=>t.id===currentTripId)){
-      currentTripId = null;
+      currentTripId=null;
       if(tripsIndex[0]) selectTrip(tripsIndex[0].id);
       else clearMainViews();
     }
   });
 }
 
-function clearMainViews(){
-  membersDiv.innerHTML = "";
-  beneficiariesDiv.innerHTML = "";
-  txTableBody.innerHTML = "";
-  resultBody.innerHTML = "";
-  txPayer.innerHTML = "";
-}
-
 function renderTripSelect(){
-  tripSelect.innerHTML = "";
+  tripSelect.innerHTML="";
   tripsIndex.forEach(t=>{
-    const opt = document.createElement("option");
-    opt.value = t.id; opt.textContent = t.name;
+    const opt=document.createElement("option");
+    opt.value=t.id;
+    opt.textContent=t.name;
     if(t.id===currentTripId) opt.selected=true;
     tripSelect.appendChild(opt);
   });
 }
 
 function selectTrip(id){
-  currentTripId = id;
-  tripSelect.value = id;
+  currentTripId=id;
+  tripSelect.value=id;
   subscribeCurrentTrip(id);
 }
 
 function subscribeCurrentTrip(id){
   if(currentTripUnsub) currentTripUnsub();
-  const ref = doc(db,"trips",id);
-  currentTripUnsub = onSnapshot(ref, (d)=>{
+  const ref=doc(db,"trips",id);
+  currentTripUnsub=onSnapshot(ref,d=>{
     if(!d.exists()){ currentTripData=null; clearMainViews(); return; }
-    currentTripData = d.data();
-    renderMembers();
-    renderPayerAndBen();
-    renderTx();
-    renderResults();
+    currentTripData=d.data();
+    renderMembers(); renderPayerAndBen(); renderTx(); renderResults();
   });
 }
 
+function clearMainViews(){
+  membersDiv.innerHTML=""; beneficiariesDiv.innerHTML="";
+  txTableBody.innerHTML=""; resultBody.innerHTML="";
+  txPayer.innerHTML="";
+}
+
+// メンバー表示
 function renderMembers(){
   if(!currentTripData) return;
-  const members = currentTripData.members||[];
   membersDiv.innerHTML="";
-  members.forEach(m=>{
+  (currentTripData.members||[]).forEach(m=>{
     const span=document.createElement("span");
     span.className="chip"; span.textContent=m;
-    const x=document.createElement("button"); x.textContent="×"; x.className="btn small"; x.style.width="auto";
-    x.onclick=()=>removeMember(m);
+    const x=document.createElement("button");
+    x.textContent="×"; x.className="btn small"; x.style.width="auto";
+    x.onclick=()=> removeMember(m);
     span.appendChild(x);
     membersDiv.appendChild(span);
   });
 }
 
+// 支払者・恩恵者
 function renderPayerAndBen(){
   if(!currentTripData) return;
-  const members = currentTripData.members||[];
   txPayer.innerHTML="";
-  members.forEach(m=>{ const opt=document.createElement("option"); opt.value=m; opt.textContent=m; txPayer.appendChild(opt); });
+  (currentTripData.members||[]).forEach(m=>{
+    const opt=document.createElement("option"); opt.value=m; opt.textContent=m;
+    txPayer.appendChild(opt);
+  });
   beneficiariesDiv.innerHTML="";
-  members.forEach(m=>{
+  (currentTripData.members||[]).forEach(m=>{
     const label=document.createElement("label"); label.className="chip";
     const cb=document.createElement("input"); cb.type="checkbox"; cb.value=m; cb.checked=true;
-    label.appendChild(cb);
-    label.append(" "+m);
+    label.appendChild(cb); label.append(" "+m);
     beneficiariesDiv.appendChild(label);
   });
 }
 
+// 支出一覧
 function renderTx(){
   if(!currentTripData) return;
-  const tx = (currentTripData.tx||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  const tx=(currentTripData.tx||[]);
   txTableBody.innerHTML="";
   tx.forEach(t=>{
     const tr=document.createElement("tr");
@@ -310,12 +266,13 @@ function renderTx(){
     `;
     txTableBody.appendChild(tr);
   });
-  txTableBody.onclick=(e)=>{
+  txTableBody.onclick=e=>{
     const btn=e.target.closest("button[data-del]");
     if(btn) deleteTx(btn.dataset.del);
   };
 }
 
+// 結果
 function renderResults(){
   if(!currentTripData) return;
   const members=currentTripData.members||[];
@@ -326,8 +283,8 @@ function renderResults(){
     const amount=Number(t.amount)||0;
     paid[t.payer]=(paid[t.payer]||0)+amount;
     const ben=(t.ben||[]).filter(b=>members.includes(b));
-    const share=ben.length?amount/ben.length:0;
-    for(const b of ben){ fair[b]=(fair[b]||0)+share; }
+    const share=ben.length ? amount/ben.length :0;
+    for(const b of ben) fair[b]=(fair[b]||0)+share;
   }
   resultBody.innerHTML="";
   members.forEach(m=>{
@@ -335,25 +292,25 @@ function renderResults(){
     const p=Math.round(paid[m]||0);
     const d=f-p;
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${m}</td><td class="right">${yen(f)}</td><td class="right">${yen(p)}</td><td class="right">${pill(d)}</td>`;
+    tr.innerHTML=`<td>${m}</td><td class="right">${yen(f)}</td><td class="right">${yen(p)}</td><td class="right"><span class="pill ${d>=0?"plus":"minus"}">${d>=0?"+":""}${yen(d)}</span></td>`;
     resultBody.appendChild(tr);
   });
 }
 
 // Firestore操作
 async function fsCreateTrip(name){
-  const ref=await addDoc(collection(db,"trips"),{ name:name||"新しい旅行", members:[], tx:[], createdAt:serverTimestamp() });
+  const ref=await addDoc(collection(db,"trips"),{name:name||"新しい旅行",members:[],tx:[],createdAt:serverTimestamp()});
   return ref.id;
 }
 async function fsUpdateTrip(partial){
   if(!currentTripId) return;
-  const data={ ...(currentTripData||{}), ...partial };
-  await setDoc(doc(db,"trips",currentTripId), data, { merge:true });
+  const data={...(currentTripData||{}),...partial};
+  await setDoc(doc(db,"trips",currentTripId),data,{merge:true});
 }
 async function fsDeleteTrip(id){ await deleteDoc(doc(db,"trips",id)); }
 
-// 操作
-createTripBtn.onclick=async ()=>{
+// 操作イベント
+createTripBtn.onclick=async()=>{
   const name=(newTripName.value||"").trim();
   if(!name) return;
   const id=await fsCreateTrip(name);
@@ -361,13 +318,16 @@ createTripBtn.onclick=async ()=>{
   selectTrip(id);
 };
 
-addMemberBtn.onclick=async ()=>{
+tripSelect.onchange=()=>{ selectTrip(tripSelect.value); };
+
+addMemberBtn.onclick=async()=>{
+  if(!currentTripData) return;
   const name=(memberName.value||"").trim();
   if(!name) return;
   const members=[...(currentTripData.members||[])];
   if(members.includes(name)) return alert("すでに存在します");
   members.push(name);
-  await fsUpdateTrip({ members });
+  await fsUpdateTrip({members});
   memberName.value="";
 };
 
@@ -379,42 +339,49 @@ async function removeMember(name){
     if(t.ben) t.ben=t.ben.filter(b=>b!==name);
     return t;
   });
-  await fsUpdateTrip({ members, tx });
+  await fsUpdateTrip({members,tx});
 }
 
-deleteTripBtn.onclick=async ()=>{
-  if(!currentTripId) return;
-  if(confirm("本当に削除しますか？")) await fsDeleteTrip(currentTripId);
-};
-
-addTxBtn.onclick=async ()=>{
-  if(!currentTripData) return;
-  if(!/^\d+$/.test(txAmount.value.trim())){
-    const val=safeEvalToNumber(txAmount.value);
-    if(!Number.isFinite(val)) return;
-    txAmount.value=Math.round(val);
+// 削除ボタン
+deleteTripBtn.onclick=async()=>{
+  const id=tripSelect.value;
+  if(!id) return alert("削除できる旅行がありません");
+  const name=tripsIndex.find(t=>t.id===id)?.name||"(無題)";
+  if(!confirm(`旅行「${name}」を削除しますか？`)) return;
+  await fsDeleteTrip(id);
+  currentTripId=null;
+  if(tripsIndex.length>1){
+    const next=tripsIndex.find(t=>t.id!==id);
+    if(next) selectTrip(next.id);
+  }else{
+    clearMainViews();
   }
-  const amount=Number(txAmount.value||0);
-  const payer=txPayer.value;
-  const ben=Array.from(beneficiariesDiv.querySelectorAll("input[type=checkbox]:checked")).map(x=>x.value);
-  if(!amount || amount<=0) return alert("金額を入れてください");
-  if(!payer) return alert("支払者を選んでください");
-  if(!ben.length) return alert("サービスを受けた人を1人以上選んでください");
-
-  const tx=currentTripData.tx||[];
-  const row={ id:crypto.randomUUID(), date:todayStr(), desc:(txDesc.value||"").trim(), amount, payer, ben };
-  await fsUpdateTrip({ tx:[...tx,row] });
-
-  txDesc.value=""; txAmount.value="";
 };
 
-clearFormBtn.onclick=()=>{ txDesc.value=""; txAmount.value=""; };
-
-function deleteTx(id){
+// 支出追加
+addTxBtn.onclick=async()=>{
   if(!currentTripData) return;
-  const tx=(currentTripData.tx||[]).filter(t=>t.id!==id);
-  fsUpdateTrip({ tx });
+  const desc=(txDesc.value||"").trim();
+  let amount=Number(txAmount.value)||0;
+  const payer=txPayer.value;
+  const ben=[...beneficiariesDiv.querySelectorAll("input:checked")].map(cb=>cb.value);
+  if(!desc || !amount || !payer || ben.length===0) return alert("必要項目を入力してください");
+  const tx=[...(currentTripData.tx||[]),{id:Date.now().toString(),desc,amount,payer,ben}];
+  await fsUpdateTrip({tx});
+  txDesc.value=""; txAmount.value=""; beneficiariesDiv.querySelectorAll("input").forEach(cb=>cb.checked=true);
+};
+
+// 支出削除
+async function deleteTx(txid){
+  if(!currentTripData) return;
+  const tx=(currentTripData.tx||[]).filter(t=>t.id!==txid);
+  await fsUpdateTrip({tx});
 }
+
+// フォームクリア
+clearFormBtn.onclick=()=>{
+  txDesc.value=""; txAmount.value=""; beneficiariesDiv.querySelectorAll("input").forEach(cb=>cb.checked=true);
+};
 </script>
 </body>
 </html>
