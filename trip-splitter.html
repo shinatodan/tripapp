@@ -4,9 +4,6 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>旅行清算アプリ</title>
-<label>既存旅行選択 
- 　<select id="tripSelect"></select>
-</label>
 <style>
   * { box-sizing: border-box; }
   :root{--gap:12px;--radius:10px}
@@ -48,11 +45,13 @@
 
 <div class="wrap">
   <aside class="card">
-    <h2>旅行</h2>
+    <h2>新規作成</h2>
     <div class="row" style="margin-top:10px">
       <input id="newTripName" placeholder="新しい旅行" />
       <button class="btn" id="createTripBtn">作成</button>
     </div>
+    <h2>旅行選択</h2>
+    <select id="tripSelect"></select>
     <hr style="border-color:#223;margin:14px 0" />
     <h2>メンバー</h2>
     <div class="row">
