@@ -49,10 +49,6 @@
     body {padding: 10px;}
     input, button { width: 100%; box-sizing: border-box; }
   }
-  @media screen and (max-width: 600px) {
-    #txTable th { white-space: nowrap; font-size: 12px; padding: 4px; }
-    #txTable td { font-size: 12px; padding: 4px; }
-  }
   .ghost-btn{display:inline-flex;align-items:center;gap:6px;margin-top:0;padding:6px 10px;border-radius:999px;border:1px dashed #2a376a;background:#0f1530;color:#eef0f6;width:auto}
   .ghost-btn:hover{border-style:solid}
 </style>
@@ -306,7 +302,6 @@ function renderTx(){
   tx.forEach(t=>{
     const tr=document.createElement("tr");
     tr.innerHTML=`
-      <td>${t.date||""}</td>
       <td>${escapeHtml(t.desc||"")}</td>
       <td class="right">${yen(t.amount)}</td>
       <td>${t.payer}</td>
