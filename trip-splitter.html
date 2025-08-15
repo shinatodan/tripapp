@@ -206,6 +206,9 @@ function renderTripSelect(){
               || (tripsIndex[0]?.id || "");
   if(target){
     tripSelect.value = target;
+    if (!currentTripId || currentTripId !== target) {
+      selectTrip(target);
+    }
   }
 }
 
