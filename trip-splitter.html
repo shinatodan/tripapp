@@ -146,6 +146,7 @@ const uuid=()=>crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.ra
 
 const newTripName=byId("newTripName");
 const createTripBtn=byId("createTripBtn");
+const tripSelect = byId("tripSelect");
 const memberName=byId("memberName");
 const addMemberBtn=byId("addMemberBtn");
 const membersDiv=byId("members");
@@ -168,6 +169,10 @@ init();
 function init(){
   subscribeTrips();
 }
+tripSelect?.addEventListener("change", ()=>{
+  if(tripSelect.value) selectTrip(tripSelect.value);
+});
+
 
 // 旅行一覧購読
 function subscribeTrips(){
@@ -186,7 +191,22 @@ function subscribeTrips(){
 }
 
 function renderTripSelect(){
-  // 旅行セレクトは省略版（1つ運用を想定）。複数運用する場合はここにセレクトUIを復活させてください。
+  if(!tripSelect) return;
+  const prev = tripSelect.value;
+  tripSelect.innerHTML = "";
+  tripsIndex.forEach(t=>{
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.name || "(無題)";
+    tripSelect.appendChild(opt);
+  });
+  // 現在選択をなるべく維持、なければ先頭
+  const target = tripsIndex.find(t=>t.id===currentTripId)?.id
+              || tripsIndex.find(t=>t.id===prev)?.id
+              || (tripsIndex[0]?.id || "");
+  if(target){
+    tripSelect.value = target;
+  }
 }
 
 function selectTrip(id){
