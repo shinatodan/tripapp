@@ -419,6 +419,18 @@ function toInt(v){
   const n = String(v).replace(/[^\d-]/g,"");
   return Number.parseInt(n,10) || 0;
 }
+function clearForm(){
+  // 入力欄をリセット
+  txDesc.value = "";
+  txAmount.value = "";
+
+  // 支払者は全員オフ
+  payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+  // 恩恵者は全員オン
+  beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+}
+
 </script>
 </body>
 </html>
