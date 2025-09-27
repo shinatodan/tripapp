@@ -261,11 +261,36 @@ function renderPayerAndBen(){
   // 恩恵者（初期全員チェック）
   beneficiariesDiv.innerHTML="";
   (currentTripData.members||[]).forEach(m=>{
-    const label=document.createElement("label"); label.className="chip";
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=m; cb.checked=true;
-    label.appendChild(cb); label.append(" "+m);
+    const label=document.createElement("label"); 
+    label.className="chip";
+    const cb=document.createElement("input"); 
+    cb.type="checkbox"; 
+    cb.value=m; 
+    cb.checked=true;
+
+    // 個別金額を保持する属性
+    cb.dataset.amount = "";
+
+    // 長押し or ダブルクリックで入力
+    let pressTimer=null;
+    label.addEventListener("touchstart", ()=>{
+      pressTimer=setTimeout(()=> editBenAmount(cb),600); // スマホ長押し
+    });
+    label.addEventListener("touchend", ()=> clearTimeout(pressTimer));
+    label.addEventListener("dblclick", ()=> editBenAmount(cb)); // PCダブルクリック
+
+    label.appendChild(cb); 
+    label.append(" "+m);
     beneficiariesDiv.appendChild(label);
   });
+
+function editBenAmount(cb){
+  const cur = cb.dataset.amount || "";
+  const val = prompt(`${cb.value} さんの受益額を入力してください（空欄でリセット）`, cur);
+  if(val===null) return;
+  const n = toInt(val);
+  cb.dataset.amount = n>0 ? n : "";
+}
 }
 
 // 支出一覧
@@ -310,9 +335,28 @@ function renderResults(){
     for(const p of payers) paid[p]=(paid[p]||0)+sharePay;
 
     // 恩恵者の按分
+   
     const ben=(t.ben||[]).filter(b=>members.includes(b));
-    const shareBen=ben.length ? amount/ben.length : 0;
-    for(const b of ben) fair[b]=(fair[b]||0)+shareBen;
+    if(ben.length){
+      let sumFixed=0;
+      let fixedTargets=[];
+      for(const b of ben){
+        const val=t.benAmounts?.[b];
+        if(val){
+          fair[b]=(fair[b]||0)+val;
+          sumFixed+=val;
+          fixedTargets.push(b);
+        }
+      }
+      // 残りを均等割り
+      const remain=amount - sumFixed;
+      const others=ben.filter(b=>!fixedTargets.includes(b));
+      const share=others.length ? remain/others.length : 0;
+      for(const b of others){
+        fair[b]=(fair[b]||0)+share;
+      }
+    }
+
   }
 
   resultBody.innerHTML="";
@@ -371,17 +415,29 @@ addTxBtn.addEventListener("click", async ()=>{
   const desc=(txDesc.value||"").trim();
   const amount = toInt(txAmount.value);
   const payers = getChecked(payersDiv);
-  const ben = getChecked(beneficiariesDiv);
+
+  // 恩恵者チェック
+  const ben = [];
+  const benAmounts = {};
+  beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    if(cb.checked){
+      ben.push(cb.value);
+      if(cb.dataset.amount){
+        benAmounts[cb.value] = toInt(cb.dataset.amount);
+      }
+    }
+  });
 
   if(!amount){ alert("金額は1円以上の整数で入力してください"); return; }
   if(payers.length===0){ alert("支払者を1人以上選んでください"); return; }
   if(ben.length===0){ alert("恩恵者を1人以上選んでください"); return; }
 
   const tx=[...(currentTripData.tx||[])];
-  tx.push({ id:uuid(), desc, amount, payers, payer:payers[0], ben });
+  tx.push({ id:uuid(), desc, amount, payers, payer:payers[0], ben, benAmounts });
   await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, tx });
   clearForm();
 });
+
 
 clearFormBtn.addEventListener("click", clearForm);
 
