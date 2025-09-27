@@ -6,193 +6,431 @@
 <title>旅行清算アプリ</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: system-ui, sans-serif; margin: 0; padding: 1rem; }
-  h2 { margin-top: 1.5rem; }
-  .chip { display:inline-flex; align-items:center; margin:0.2rem; padding:0.3rem 0.6rem;
-    border:1px solid #ccc; border-radius:9999px; cursor:pointer; user-select:none;}
-  .chip input { margin-right:0.3rem; }
-  .list {margin:0.5rem 0; padding:0;}
-  .list li {list-style:none; border-bottom:1px solid #ddd; padding:0.3rem 0;}
-  button {margin:0.2rem; padding:0.4rem 0.8rem;}
-  .small { font-size:0.8em; margin-left:0.4em; color:#666;}
+  :root{--gap:12px;--radius:10px}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.4;margin:0;background:#0b1020;color:#eef0f6}
+  header{padding:16px 20px;border-bottom:1px solid #223}
+  h1{font-size:20px;margin:0}
+  .wrap{display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .card{background:#121833;border:1px solid #1e2646;border-radius:var(--radius);padding:16px}
+  .card h2{font-size:16px;margin:0 0 8px 0}
+  label{display:block;font-size:13px;margin-top:10px;opacity:.9}
+  input,select,button,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #2a376a;background:#0f1530;color:#eef0f6;font-size:16px;}
+  input[type="checkbox"]{width:auto;margin-right:8px}
+  .row{display:flex;gap:var(--gap)}
+  .row > *{flex:1}
+  .vstack{display:flex;flex-direction:column;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #2a376a;background:#0f1530;border-radius:999px;padding:6px 10px;margin:4px 6px 0 0;font-size:13px}
+  .chips{margin-top:6px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
+  .pill.plus{background:#123d28;border:1px solid #1c6b42;color:#a9f3c8}
+  .pill.minus{background:#3a1820;border:1px solid #7e3340;color:#ffc7d0}
+  table{width:100%;border-collapse:collapse;margin-top:8px;table-layout:fixed}
+  th,td{border-bottom:1px solid #223;padding:8px;text-align:left;vertical-align:top;word-wrap:break-word}
+  tfoot td{font-weight:bold}
+  .right{text-align:right}
+  .muted{opacity:.8}
+  .btn{cursor:pointer}
+  .btn.secondary{background:#0f1530;border-color:#2a376a}
+  .btn.danger{background:#2a0f18;border-color:#6a2a3a}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  @media(max-width:780px){.grid{grid-template-columns:1fr}}
+  .small{font-size:12px}
 </style>
 </head>
 <body>
-<h1>旅行清算アプリ</h1>
+<header>
+  <h1>旅行清算アプリ</h1>
+</header>
 
-<h2>メンバー</h2>
-<input id="memberName" placeholder="メンバー名"/>
-<button onclick="addMember()">追加</button>
-<div id="members"></div>
+<div class="wrap">
+  <aside class="card">
+    <h2>新規作成</h2>
+    <div class="row" style="margin-top:10px">
+      <input id="newTripName" placeholder="新しい旅行" />
+      <button class="btn" id="createTripBtn">作成</button>
+    </div>
+    <hr style="border-color:#223;margin:14px 0" />
+    <h2>旅行選択</h2>
+    <select id="tripSelect"></select>
+    <hr style="border-color:#223;margin:14px 0" />
+    <h2>メンバー</h2>
+    <div class="row">
+      <input id="memberName" placeholder="名前" />
+      <button class="btn" id="addMemberBtn">追加</button>
+    </div>
+    <div id="members" class="chips"></div>
+    <hr style="border-color:#223;margin:14px 0" />
+    <button class="btn danger" id="deleteTripBtn" style="margin-top:8px">この旅行を削除</button>
+  </aside>
 
-<h2>支出入力</h2>
-<input id="txDesc" placeholder="説明"/>
-<input id="txAmount" type="number" placeholder="金額"/>
-<div>
-  <h3>支払者</h3>
-  <div id="payers"></div>
+  <main>
+    <section class="card">
+      <h2>支出を追加</h2>
+      <div class="grid">
+        <div>
+          <label for="txDesc">説明</label>
+          <input id="txDesc" placeholder="例：銭湯、宿代、ジュース など" />
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:10px">
+        <div>
+          <label for="txAmount">金額（円）</label>
+          <input id="txAmount" type="text" inputmode="decimal" placeholder="例：6500" />
+        </div>
+        <div>
+          <label>支払者（複数可）</label>
+          <div id="payers" class="chips"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>サービスを受けた人</label>
+        <div id="beneficiaries" class="chips"></div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="addTxBtn">支出を追加</button>
+        <button class="btn secondary" id="clearFormBtn">入力クリア</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>支出一覧</h2>
+      <table id="txTable">
+        <thead>
+          <tr><th>説明</th><th class="right">金額</th><th>支払者</th><th>恩恵者</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>結果</h2>
+      <table id="resultTable">
+        <thead>
+          <tr><th>名前</th><th class="right">使用額</th><th class="right">支払額</th><th class="right">勝敗</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
 </div>
-<div>
-  <h3>恩恵者</h3>
-  <div id="beneficiaries"></div>
-</div>
-<button onclick="addTx()">支出を追加</button>
-<button onclick="clearForm()">入力クリア</button>
-
-<h2>支出一覧</h2>
-<ul id="txList" class="list"></ul>
-
-<h2>精算結果</h2>
-<ul id="resultList" class="list"></ul>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, setDoc, deleteDoc, doc,
+  onSnapshot, serverTimestamp, query, orderBy
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-const firebaseConfig = { /* ←ここに自分の設定を入れてください */ };
+const firebaseConfig = {
+  apiKey: "AIzaSyDgHVdhx0RwTv6PkzBBNgY8Ouis7yRGwlY",
+  authDomain: "trip-app-eb508.firebaseapp.com",
+  projectId: "trip-app-eb508",
+  storageBucket: "trip-app-eb508.firebasestorage.app",
+  messagingSenderId: "38650349203",
+  appId: "1:38650349203:web:1987ddb1536bca9bbe6f66",
+  measurementId: "G-JBSHND42QP"
+};
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const memberName = document.getElementById("memberName");
-const membersDiv = document.getElementById("members");
-const payersDiv = document.getElementById("payers");
-const beneficiariesDiv = document.getElementById("beneficiaries");
-const txDesc = document.getElementById("txDesc");
-const txAmount = document.getElementById("txAmount");
-const txList = document.getElementById("txList");
-const resultList = document.getElementById("resultList");
+// ユーティリティ
+const byId=id=>document.getElementById(id);
+const yen=n=>Math.round(n||0).toLocaleString();
+const escapeHtml=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+const uuid=()=>crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random().toString(16).slice(2));
 
-let members = [];
-let tx = [];
+const newTripName=byId("newTripName");
+const createTripBtn=byId("createTripBtn");
+const tripSelect = byId("tripSelect");
+const memberName=byId("memberName");
+const addMemberBtn=byId("addMemberBtn");
+const membersDiv=byId("members");
+const deleteTripBtn=byId("deleteTripBtn");
+const txDesc=byId("txDesc");
+const txAmount=byId("txAmount");
+const payersDiv=byId("payers");
+const beneficiariesDiv=byId("beneficiaries");
+const addTxBtn=byId("addTxBtn");
+const clearFormBtn=byId("clearFormBtn");
+const txTableBody=document.querySelector("#txTable tbody");
+const resultBody=document.querySelector("#resultTable tbody");
 
-function uuid(){ return Math.random().toString(36).slice(2); }
-function toInt(v){ return parseInt(v)||0; }
+// Firestore 状態
+let tripsUnsub=null, currentTripUnsub=null;
+let tripsIndex=[], currentTripId=null, currentTripData=null;
 
-function renderMembers(){
-  membersDiv.innerHTML="";
-  payersDiv.innerHTML="";
-  beneficiariesDiv.innerHTML="";
-  for(const m of members){
-    const chip=document.createElement("label");
-    chip.className="chip";
-    const cb=document.createElement("input");
-    cb.type="checkbox"; cb.value=m;
-    chip.appendChild(cb); chip.append(" "+m);
-    payersDiv.appendChild(chip);
-
-    const bchip=document.createElement("label");
-    bchip.className="chip";
-    const bcb=document.createElement("input");
-    bcb.type="checkbox"; bcb.value=m; bcb.checked=true;
-    bchip.appendChild(bcb); bchip.append(" "+m);
-    const span=document.createElement("span");
-    span.className="small"; span.textContent="均等";
-    bchip.appendChild(span);
-
-    // 長押しで個別金額入力
-    let pressTimer;
-    bchip.addEventListener("touchstart", e=>{
-      pressTimer=setTimeout(()=>{
-        const val=prompt(`${m} の金額を入力`, bcb.dataset.amount||"");
-        if(val!==null){
-          const num=toInt(val);
-          if(num>0){
-            bcb.dataset.amount=num;
-            span.textContent=num+"円";
-          }else{
-            delete bcb.dataset.amount;
-            span.textContent="均等";
-          }
-        }
-      },600);
-    },{passive:true});
-    bchip.addEventListener("touchend", ()=>clearTimeout(pressTimer));
-
-    beneficiariesDiv.appendChild(bchip);
-  }
+// 初期化
+init();
+function init(){
+  subscribeTrips();
 }
+tripSelect?.addEventListener("change", ()=>{
+  if(tripSelect.value) selectTrip(tripSelect.value);
+});
 
-function addMember(){
-  const n=memberName.value.trim();
-  if(!n) return;
-  members.push(n);
-  memberName.value="";
-  renderMembers();
-}
 
-async function addTx(){
-  const desc=txDesc.value.trim();
-  const amount=toInt(txAmount.value);
-  if(!desc||amount<=0) return;
-  const payers=[...payersDiv.querySelectorAll("input:checked")].map(x=>x.value);
-  if(payers.length===0) return;
-  const ben=[...beneficiariesDiv.querySelectorAll("input:checked")].map(x=>x.value);
-  if(ben.length===0) return;
-
-  const benAmounts={};
-  for(const cb of beneficiariesDiv.querySelectorAll("input:checked")){
-    if(cb.dataset.amount) benAmounts[cb.value]=toInt(cb.dataset.amount);
-  }
-
-  const item={ id:uuid(), desc, amount, payers, payer:payers[0], ben, benAmounts };
-  tx.push(item);
-  await addDoc(collection(db,"tx"),item);
-  renderTx(); renderResults(); clearForm();
-}
-
-function renderTx(){
-  txList.innerHTML="";
-  for(const t of tx){
-    const li=document.createElement("li");
-    li.textContent=`${t.desc} : ${t.amount}円, 支払:${t.payer}, 恩恵:${t.ben.join(",")}`;
-    txList.appendChild(li);
-  }
-}
-
-function renderResults(){
-  const paid={}, fair={};
-  for(const m of members){ paid[m]=0; fair[m]=0; }
-  for(const t of tx){
-    const perPay=t.amount/t.payers.length;
-    for(const p of t.payers){ paid[p]+=perPay; }
-
-    const benAmts=t.benAmounts||{};
-    let fixed=0; let flexible=[];
-    for(const b of t.ben){
-      if(benAmts[b]!=null){ fair[b]+=benAmts[b]; fixed+=benAmts[b]; }
-      else flexible.push(b);
+// 旅行一覧購読
+function subscribeTrips(){
+  if(tripsUnsub) tripsUnsub();
+  const q=query(collection(db,"trips"),orderBy("createdAt","asc"));
+  tripsUnsub=onSnapshot(q,snap=>{
+    tripsIndex=snap.docs.map(d=>({id:d.id,name:d.data().name||"(無題)"}));
+    renderTripSelect();
+    if(!currentTripId && tripsIndex[0]) selectTrip(tripsIndex[0].id);
+    else if(currentTripId && !tripsIndex.find(t=>t.id===currentTripId)){
+      currentTripId=null;
+      if(tripsIndex[0]) selectTrip(tripsIndex[0].id);
+      else clearMainViews();
     }
-    if(flexible.length>0){
-      const remain=t.amount-fixed;
-      const per=remain/flexible.length;
-      for(const b of flexible){ fair[b]+=per; }
-    }
-  }
-  resultList.innerHTML="";
-  for(const m of members){
-    const li=document.createElement("li");
-    li.textContent=`${m}: 支払 ${paid[m].toFixed(0)}円, 負担 ${fair[m].toFixed(0)}円, 差額 ${(paid[m]-fair[m]).toFixed(0)}円`;
-    resultList.appendChild(li);
-  }
-}
-
-function clearForm(){
-  txDesc.value="";
-  txAmount.value="";
-  payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);
-  beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-    cb.checked=true;
-    delete cb.dataset.amount;
-    cb.parentNode.querySelector("span").textContent="均等";
   });
 }
 
-// Firestoreから初期ロード
-(async()=>{
-  const snap=await getDocs(collection(db,"tx"));
-  tx=snap.docs.map(d=>d.data());
-  renderTx(); renderResults();
-})();
+function renderTripSelect(){
+  if(!tripSelect) return;
+  const prev = tripSelect.value;
+  tripSelect.innerHTML = "";
+  tripsIndex.forEach(t=>{
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.name || "(無題)";
+    tripSelect.appendChild(opt);
+  });
+  // 現在選択をなるべく維持、なければ先頭
+  const target = tripsIndex.find(t=>t.id===currentTripId)?.id
+              || tripsIndex.find(t=>t.id===prev)?.id
+              || (tripsIndex[0]?.id || "");
+  if(target){
+    tripSelect.value = target;
+    if (!currentTripId || currentTripId !== target) {
+      selectTrip(target);
+    }
+  }
+}
+
+function selectTrip(id){
+  currentTripId=id;
+  subscribeCurrentTrip(id);
+}
+
+function subscribeCurrentTrip(id){
+  if(currentTripUnsub) currentTripUnsub();
+  const ref=doc(db,"trips",id);
+  currentTripUnsub=onSnapshot(ref,d=>{
+    if(!d.exists()){ currentTripData=null; clearMainViews(); return; }
+    currentTripData=d.data();
+    renderMembers(); renderPayerAndBen(); renderTx(); renderResults();
+  });
+}
+
+function clearMainViews(){
+  membersDiv.innerHTML=""; payersDiv.innerHTML=""; beneficiariesDiv.innerHTML="";
+  txTableBody.innerHTML=""; resultBody.innerHTML="";
+}
+
+// メンバー表示
+function renderMembers(){
+  if(!currentTripData) return;
+  membersDiv.innerHTML="";
+  (currentTripData.members||[]).forEach(m=>{
+    const span=document.createElement("span");
+    span.className="chip"; span.textContent=m+" ";
+    const x=document.createElement("button");
+    x.textContent="×"; x.className="btn small"; x.style.width="auto";
+    x.onclick=()=> removeMember(m);
+    span.appendChild(x);
+    membersDiv.appendChild(span);
+  });
+}
+
+// 支払者・恩恵者（両方ともチップ複数選択）
+function renderPayerAndBen(){
+  if(!currentTripData) return;
+  // 支払者
+  payersDiv.innerHTML="";
+  (currentTripData.members||[]).forEach(m=>{
+    const label=document.createElement("label"); label.className="chip";
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=m; cb.checked=false;
+    label.appendChild(cb); label.append(" "+m);
+    payersDiv.appendChild(label);
+  });
+  // 恩恵者（初期全員チェック）
+  beneficiariesDiv.innerHTML="";
+  (currentTripData.members||[]).forEach(m=>{
+    const label=document.createElement("label"); label.className="chip";
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=m; cb.checked=true;
+    label.appendChild(cb); label.append(" "+m);
+    beneficiariesDiv.appendChild(label);
+  });
+}
+
+// 支出一覧
+function renderTx(){
+  if(!currentTripData) return;
+  const tx=(currentTripData.tx||[]);
+  txTableBody.innerHTML="";
+  tx.forEach(t=>{
+    const payers = t.payers && t.payers.length ? t.payers : (t.payer ? [t.payer] : []);
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${escapeHtml(t.desc||"")}</td>
+      <td class="right">${yen(t.amount)}</td>
+      <td>${payers.join(", ")}</td>
+      <td>${(t.ben||[]).join(", ")}</td>
+      <td><button class="btn small danger" data-del="${t.id}">削除</button></td>
+    `;
+    txTableBody.appendChild(tr);
+  });
+  txTableBody.onclick=e=>{
+    const btn=e.target.closest("button[data-del]");
+    if(btn) deleteTx(btn.dataset.del);
+  };
+}
+
+// 結果（支払者が複数の場合は等分）
+function renderResults(){
+  if(!currentTripData) return;
+  const members=currentTripData.members||[];
+  const tx=currentTripData.tx||[];
+  const fair=Object.fromEntries(members.map(m=>[m,0]));
+  const paid=Object.fromEntries(members.map(m=>[m,0]));
+
+  for(const t of tx){
+    const amount=Number(t.amount)||0;
+
+    // 支払額の按分
+    const payers = (t.payers && t.payers.length) ? t.payers.filter(p=>members.includes(p))
+                 : (t.payer ? [t.payer] : []);
+    if(payers.length===0) continue;
+    const sharePay = amount / payers.length;
+    for(const p of payers) paid[p]=(paid[p]||0)+sharePay;
+
+    // 恩恵者の按分
+    const ben=(t.ben||[]).filter(b=>members.includes(b));
+    const shareBen=ben.length ? amount/ben.length : 0;
+    for(const b of ben) fair[b]=(fair[b]||0)+shareBen;
+  }
+
+  resultBody.innerHTML="";
+  members.forEach(m=>{
+    const f=Math.round(fair[m]||0);
+    const p=Math.round(paid[m]||0);
+    const d=f-p;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${m}</td>
+      <td class="right">${yen(f)}</td>
+      <td class="right">${yen(p)}</td>
+      <td class="right"><span class="pill ${d>=0?"plus":"minus"}">${d>=0?"+":""}${yen(d)}</span></td>`;
+    resultBody.appendChild(tr);
+  });
+}
+
+// ===== 操作系 =====
+createTripBtn.addEventListener("click", async ()=>{
+  const name=(newTripName.value||"").trim()||"新しい旅行";
+  const ref = await addDoc(collection(db,"trips"),{
+    name, members:[], tx:[], createdAt:serverTimestamp()
+  });
+  selectTrip(ref.id);
+  newTripName.value="";
+});
+
+addMemberBtn.addEventListener("click", async ()=>{
+  if(!currentTripData || !currentTripId) return;
+  const m=(memberName.value||"").trim();
+  if(!m) return;
+  const members=[...(currentTripData.members||[])];
+  if(members.includes(m)) { memberName.value=""; return; }
+  members.push(m);
+  await setDoc(doc(db,"trips",currentTripId),{
+    ...currentTripData,
+    members,
+    tx: (currentTripData.tx||[]).map(t=>({
+      ...t,
+      ben: (t.ben||[]).filter(b=>members.includes(b)),
+      payers: (t.payers|| (t.payer?[t.payer]:[])).filter(p=>members.includes(p))
+    }))
+  });
+  memberName.value="";
+});
+
+deleteTripBtn.addEventListener("click", async ()=>{
+  if(!currentTripId) return;
+  if(!confirm("本当にこの旅行を削除しますか？")) return;
+  await deleteDoc(doc(db,"trips",currentTripId));
+  currentTripId=null; currentTripData=null;
+  clearMainViews();
+});
+
+addTxBtn.addEventListener("click", async ()=>{
+  if(!currentTripData || !currentTripId) return;
+  const desc=(txDesc.value||"").trim();
+  const amount = toInt(txAmount.value);
+  const payers = getChecked(payersDiv);
+  const ben = getChecked(beneficiariesDiv);
+
+  if(!amount){ alert("金額は1円以上の整数で入力してください"); return; }
+  if(payers.length===0){ alert("支払者を1人以上選んでください"); return; }
+  if(ben.length===0){ alert("恩恵者を1人以上選んでください"); return; }
+
+  const tx=[...(currentTripData.tx||[])];
+  tx.push({ id:uuid(), desc, amount, payers, payer:payers[0], ben });
+  await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, tx });
+  clearForm();
+});
+
+clearFormBtn.addEventListener("click", clearForm);
+
+async function deleteTx(id){
+  if(!currentTripData || !currentTripId) return;
+  const tx=(currentTripData.tx||[]).filter(t=>t.id!==id);
+  await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, tx });
+}
+
+// メンバー削除
+async function removeMember(name){
+  if(!currentTripData || !currentTripId) return;
+  if(!confirm(`${name} をメンバーから削除しますか？`)) return;
+  const members=(currentTripData.members||[]).filter(m=>m!==name);
+  const tx=(currentTripData.tx||[]).map(t=>{
+    const payers = (t.payers || (t.payer?[t.payer]:[])).filter(p=>p!==name);
+    const ben = (t.ben||[]).filter(b=>b!==name);
+    // 支払者がいなくなった取引は安全のため削除
+    if(payers.length===0) return null;
+    return { ...t, payers, payer:payers[0], ben };
+  }).filter(Boolean);
+  await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, members, tx });
+}
+
+// ヘルパ
+function getChecked(container){
+  const arr=[];
+  container.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    if(cb.checked) arr.push(cb.value);
+  });
+  return arr.filter(n=> (currentTripData.members||[]).includes(n));
+}
+function toInt(v){
+  if(v==null) return 0;
+  const n = String(v).replace(/[^\d-]/g,"");
+  return Number.parseInt(n,10) || 0;
+}
+function clearForm(){
+  // 入力欄をリセット
+  txDesc.value = "";
+  txAmount.value = "";
+
+  // 支払者は全員オフ
+  payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+  // 恩恵者は全員オン
+  beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+}
+
 </script>
 </body>
 </html>
