@@ -286,7 +286,7 @@ function renderPayerAndBen(){
 
 function editBenAmount(cb){
   const cur = cb.dataset.amount || "";
-  const val = prompt(`${cb.value} さんの受益額を入力してください（空欄でリセット）`, cur);
+  const val = prompt(`${cb.value} さんの使用額を入力してください`, cur);
   if(val===null) return;
   const n = toInt(val);
   cb.dataset.amount = n>0 ? n : "";
@@ -428,7 +428,7 @@ addTxBtn.addEventListener("click", async ()=>{
     }
   });
 
-  if(!amount){ alert("金額は1円以上の整数で入力してください"); return; }
+  if(!amount){ alert("金額は1円以上で入力してください"); return; }
   if(payers.length===0){ alert("支払者を1人以上選んでください"); return; }
   if(ben.length===0){ alert("恩恵者を1人以上選んでください"); return; }
 
