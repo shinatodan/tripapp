@@ -36,6 +36,9 @@
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   @media(max-width:780px){.grid{grid-template-columns:1fr}}
   .small{font-size:12px}
+  /* 編集中のハイライト */
+  .editing-mode input { border-color: #4a5c9a; background: #1a2240; }
+  .editing-mode #addTxBtn { background: #2a376a; border-color: #4a5c9a; }
 </style>
 </head>
 <body>
@@ -51,8 +54,11 @@
       <button class="btn" id="createTripBtn">作成</button>
     </div>
     <hr style="border-color:#223;margin:14px 0" />
+    
     <h2>旅行選択</h2>
     <select id="tripSelect"></select>
+    <button class="btn secondary small" id="renameTripBtn" style="margin-top:8px">旅行名を変更</button>
+    
     <hr style="border-color:#223;margin:14px 0" />
     <h2>メンバー</h2>
     <div class="row">
@@ -65,8 +71,8 @@
   </aside>
 
   <main>
-    <section class="card">
-      <h2>支出を追加</h2>
+    <section class="card" id="txFormCard">
+      <h2 id="formTitle">支出を追加</h2>
       <div class="grid">
         <div>
           <label for="txDesc">説明</label>
@@ -86,7 +92,7 @@
       </div>
 
       <div style="margin-top:10px">
-        <label>サービスを受けた人</label>
+        <label>サービスを受けた人 <span class="muted small">※ダブルクリック/長押しで金額指定</span></label>
         <div id="beneficiaries" class="chips"></div>
       </div>
 
@@ -100,7 +106,7 @@
       <h2>支出一覧</h2>
       <table id="txTable">
         <thead>
-          <tr><th>説明</th><th class="right">金額</th><th>支払者</th><th>恩恵者</th><th></th></tr>
+          <tr><th>説明</th><th class="right">金額</th><th>支払者</th><th>恩恵者</th><th>操作</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -121,7 +127,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, setDoc, deleteDoc, doc,
+  getFirestore, collection, addDoc, setDoc, updateDoc, deleteDoc, doc,
   onSnapshot, serverTimestamp, query, orderBy
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
@@ -147,10 +153,13 @@ const uuid=()=>crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.ra
 const newTripName=byId("newTripName");
 const createTripBtn=byId("createTripBtn");
 const tripSelect = byId("tripSelect");
+const renameTripBtn = byId("renameTripBtn");
 const memberName=byId("memberName");
 const addMemberBtn=byId("addMemberBtn");
 const membersDiv=byId("members");
 const deleteTripBtn=byId("deleteTripBtn");
+const txFormCard=byId("txFormCard");
+const formTitle=byId("formTitle");
 const txDesc=byId("txDesc");
 const txAmount=byId("txAmount");
 const payersDiv=byId("payers");
@@ -163,6 +172,7 @@ const resultBody=document.querySelector("#resultTable tbody");
 // Firestore 状態
 let tripsUnsub=null, currentTripUnsub=null;
 let tripsIndex=[], currentTripId=null, currentTripData=null;
+let editingTxId = null; // 編集中のID
 
 // 初期化
 init();
@@ -214,6 +224,7 @@ function renderTripSelect(){
 
 function selectTrip(id){
   currentTripId=id;
+  clearForm(); // 旅行を切り替えたらフォームクリア
   subscribeCurrentTrip(id);
 }
 
@@ -250,15 +261,42 @@ function renderMembers(){
 // 支払者・恩恵者（両方ともチップ複数選択）
 function renderPayerAndBen(){
   if(!currentTripData) return;
+  
+  // DOM要素がすでに存在するかチェックして、あれば更新だけする方が良いが
+  // 編集モード維持のために今回は「全書き換え後、編集中ならチェックを復元」するアプローチを取る
+  // ただし renderPayerAndBen はデータ更新時に呼ばれるため、編集中に他人が更新するとフォームがリセットされるリスクがある。
+  // 今回は簡易化のため、編集中(editingTxId != null)の場合は再描画時にフォームの状態を維持するロジックを入れる。
+
+  // フォームの状態を一時保存
+  const currentFormState = {
+      payers: getChecked(payersDiv),
+      bens: [], // {name, amount}
+  };
+  beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+      if(cb.checked) currentFormState.bens.push({name:cb.value, amount: cb.dataset.amount});
+  });
+
   // 支払者
   payersDiv.innerHTML="";
   (currentTripData.members||[]).forEach(m=>{
     const label=document.createElement("label"); label.className="chip";
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=m; cb.checked=false;
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=m; 
+    
+    // 状態復元 or 新規
+    // 編集中、またはユーザーが入力中の場合は既存のチェックを優先したいが、
+    // ここでは「DBデータ変更による再描画」なので、本来はDB正にするべきだが、
+    // 入力中のフォームが勝手に変わると困るので、編集中のみ復元を試みる。
+    // ※ 簡易実装として、編集中でなければデフォルト(全員OFF/恩恵者は全員ON)にはせず、
+    //    clearForm()が明示的に呼ばれたときだけリセットされる挙動にする。
+    
+    // ここではシンプルに再生成し、あとで必要ならチェックをつける
+    cb.checked = false; 
+
     label.appendChild(cb); label.append(" "+m);
     payersDiv.appendChild(label);
   });
-  // 恩恵者（初期全員チェック）
+
+  // 恩恵者
   beneficiariesDiv.innerHTML="";
   (currentTripData.members||[]).forEach(m=>{
     const label=document.createElement("label"); 
@@ -266,9 +304,7 @@ function renderPayerAndBen(){
     const cb=document.createElement("input"); 
     cb.type="checkbox"; 
     cb.value=m; 
-    cb.checked=true;
-
-    // 個別金額を保持する属性
+    cb.checked = false; 
     cb.dataset.amount = "";
 
     // 長押し or ダブルクリックで入力
@@ -283,14 +319,41 @@ function renderPayerAndBen(){
     label.append(" "+m);
     beneficiariesDiv.appendChild(label);
   });
+  
+  // フォームの状態を復元（編集中 または 入力中）
+  // ただし、メンバー削除等で存在しなくなった人は除外される
+  restoreFormState(currentFormState);
+}
+
+function restoreFormState(state){
+    // 支払者
+    payersDiv.querySelectorAll('input').forEach(cb=>{
+        if(state.payers.includes(cb.value)) cb.checked = true;
+    });
+    // 恩恵者（初期ロード時は全員ONにしたいが、編集中はstateに従う）
+    // stateが空（初期状態）なら全員ONにする
+    const isInit = state.payers.length === 0 && state.bens.length === 0 && !editingTxId;
+    
+    beneficiariesDiv.querySelectorAll('input').forEach(cb=>{
+        if(isInit){
+            cb.checked = true; 
+        } else {
+            const match = state.bens.find(b=>b.name === cb.value);
+            if(match) {
+                cb.checked = true;
+                if(match.amount) cb.dataset.amount = match.amount;
+            }
+        }
+    });
+}
+
 
 function editBenAmount(cb){
   const cur = cb.dataset.amount || "";
-  const val = prompt(`${cb.value} さんの使用額を入力してください`, cur);
+  const val = prompt(`${cb.value} さんの使用額を入力してください（空欄で均等割り）`, cur);
   if(val===null) return;
   const n = toInt(val);
   cb.dataset.amount = n>0 ? n : "";
-}
 }
 
 // 支出一覧
@@ -306,13 +369,21 @@ function renderTx(){
       <td class="right">${yen(t.amount)}</td>
       <td>${payers.join(", ")}</td>
       <td>${(t.ben||[]).join(", ")}</td>
-      <td><button class="btn small danger" data-del="${t.id}">削除</button></td>
+      <td>
+        <div style="display:flex;gap:4px;justify-content:flex-end">
+           <button class="btn small secondary" data-edit="${t.id}">編集</button>
+           <button class="btn small danger" data-del="${t.id}">削除</button>
+        </div>
+      </td>
     `;
     txTableBody.appendChild(tr);
   });
   txTableBody.onclick=e=>{
-    const btn=e.target.closest("button[data-del]");
-    if(btn) deleteTx(btn.dataset.del);
+    const delBtn=e.target.closest("button[data-del]");
+    if(delBtn) deleteTx(delBtn.dataset.del);
+    
+    const editBtn=e.target.closest("button[data-edit]");
+    if(editBtn) startEditTx(editBtn.dataset.edit);
   };
 }
 
@@ -329,13 +400,12 @@ function renderResults(){
 
     // 支払額の按分
     const payers = (t.payers && t.payers.length) ? t.payers.filter(p=>members.includes(p))
-                 : (t.payer ? [t.payer] : []);
+                  : (t.payer ? [t.payer] : []);
     if(payers.length===0) continue;
     const sharePay = amount / payers.length;
     for(const p of payers) paid[p]=(paid[p]||0)+sharePay;
 
     // 恩恵者の按分
-   
     const ben=(t.ben||[]).filter(b=>members.includes(b));
     if(ben.length){
       let sumFixed=0;
@@ -356,14 +426,13 @@ function renderResults(){
         fair[b]=(fair[b]||0)+share;
       }
     }
-
   }
 
   resultBody.innerHTML="";
   members.forEach(m=>{
     const f=Math.round(fair[m]||0);
     const p=Math.round(paid[m]||0);
-    const d=f-p;
+    const d=p-f; // 支払った額 - 使うべき額 = 受け取る額(+) / 払う額(-)
     const tr=document.createElement("tr");
     tr.innerHTML=`<td>${m}</td>
       <td class="right">${yen(f)}</td>
@@ -381,6 +450,16 @@ createTripBtn.addEventListener("click", async ()=>{
   });
   selectTrip(ref.id);
   newTripName.value="";
+});
+
+// 旅行名変更
+renameTripBtn.addEventListener("click", async ()=>{
+    if(!currentTripId || !currentTripData) return;
+    const curName = currentTripData.name || "";
+    const newName = prompt("新しい旅行名を入力してください", curName);
+    if(newName && newName !== curName) {
+        await updateDoc(doc(db, "trips", currentTripId), { name: newName });
+    }
 });
 
 addMemberBtn.addEventListener("click", async ()=>{
@@ -432,9 +511,32 @@ addTxBtn.addEventListener("click", async ()=>{
   if(payers.length===0){ alert("支払者を1人以上選んでください"); return; }
   if(ben.length===0){ alert("恩恵者を1人以上選んでください"); return; }
 
-  const tx=[...(currentTripData.tx||[])];
-  tx.push({ id:uuid(), desc, amount, payers, payer:payers[0], ben, benAmounts });
-  await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, tx });
+  let newTxList = [...(currentTripData.tx||[])];
+  
+  const txObj = { 
+      id: editingTxId || uuid(), 
+      desc, 
+      amount, 
+      payers, 
+      payer:payers[0], // 後方互換
+      ben, 
+      benAmounts 
+  };
+
+  if(editingTxId) {
+      // 更新
+      const idx = newTxList.findIndex(t => t.id === editingTxId);
+      if(idx !== -1) {
+          newTxList[idx] = txObj;
+      } else {
+          newTxList.push(txObj);
+      }
+  } else {
+      // 新規
+      newTxList.push(txObj);
+  }
+
+  await updateDoc(doc(db,"trips",currentTripId),{ tx: newTxList });
   clearForm();
 });
 
@@ -443,8 +545,50 @@ clearFormBtn.addEventListener("click", clearForm);
 
 async function deleteTx(id){
   if(!currentTripData || !currentTripId) return;
+  if(!confirm("この支出を削除しますか？")) return;
   const tx=(currentTripData.tx||[]).filter(t=>t.id!==id);
-  await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, tx });
+  // もし編集中だったら編集モード解除
+  if(editingTxId === id) clearForm();
+  await updateDoc(doc(db,"trips",currentTripId),{ tx });
+}
+
+// 支出編集モード開始
+function startEditTx(id) {
+    if(!currentTripData) return;
+    const t = (currentTripData.tx||[]).find(x => x.id === id);
+    if(!t) return;
+    
+    editingTxId = id;
+    txFormCard.classList.add("editing-mode");
+    formTitle.textContent = "支出を編集";
+    addTxBtn.textContent = "支出を更新";
+    clearFormBtn.textContent = "キャンセル";
+
+    // フォームに値をセット
+    txDesc.value = t.desc || "";
+    txAmount.value = t.amount;
+    
+    // 支払者
+    const payers = t.payers || (t.payer ? [t.payer] : []);
+    payersDiv.querySelectorAll('input').forEach(cb => {
+        cb.checked = payers.includes(cb.value);
+    });
+
+    // 恩恵者
+    const bens = t.ben || [];
+    const benAmounts = t.benAmounts || {};
+    beneficiariesDiv.querySelectorAll('input').forEach(cb => {
+        const isTarget = bens.includes(cb.value);
+        cb.checked = isTarget;
+        if(isTarget && benAmounts[cb.value]) {
+            cb.dataset.amount = benAmounts[cb.value];
+        } else {
+            cb.dataset.amount = "";
+        }
+    });
+
+    // スクロールしてフォームを見せる
+    txFormCard.scrollIntoView({ behavior: "smooth" });
 }
 
 // メンバー削除
@@ -468,6 +612,7 @@ function getChecked(container){
   container.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
     if(cb.checked) arr.push(cb.value);
   });
+  // メンバーから消えている人は除外
   return arr.filter(n=> (currentTripData.members||[]).includes(n));
 }
 function toInt(v){
@@ -476,6 +621,12 @@ function toInt(v){
   return Number.parseInt(n,10) || 0;
 }
 function clearForm(){
+  editingTxId = null;
+  txFormCard.classList.remove("editing-mode");
+  formTitle.textContent = "支出を追加";
+  addTxBtn.textContent = "支出を追加";
+  clearFormBtn.textContent = "入力クリア";
+
   // 入力欄をリセット
   txDesc.value = "";
   txAmount.value = "";
@@ -483,8 +634,11 @@ function clearForm(){
   // 支払者は全員オフ
   payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
 
-  // 恩恵者は全員オン
-  beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+  // 恩恵者は全員オン、個別金額クリア
+  beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.checked = true;
+      cb.dataset.amount = "";
+  });
 }
 
 </script>
