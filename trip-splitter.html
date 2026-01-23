@@ -432,7 +432,7 @@ function renderResults(){
   members.forEach(m=>{
     const f=Math.round(fair[m]||0);
     const p=Math.round(paid[m]||0);
-    const d=p-f; // 支払った額 - 使うべき額 = 受け取る額(+) / 払う額(-)
+    const d=f-p; // 支払った額 - 使うべき額 = 受け取る額(+) / 払う額(-)
     const tr=document.createElement("tr");
     tr.innerHTML=`<td>${m}</td>
       <td class="right">${yen(f)}</td>
