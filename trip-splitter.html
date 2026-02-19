@@ -38,11 +38,64 @@
   .editing-mode #addTxBtn { background: #2a376a; border-color: #4a5c9a; }
   input:focus::placeholder, textarea:focus::placeholder{ opacity: 0; }
 
+  /* タブ（Excelシート風） */
+  .tabs{
+    display:flex; gap:8px; flex-wrap:wrap;
+    margin:0 0 12px 0;
+  }
+  .tabbtn{
+    width:auto; padding:8px 12px;
+    border-radius:999px;
+    border:1px solid #2a376a;
+    background:#0f1530;
+    cursor:pointer;
+    font-size:13px;
+    opacity:.9;
+  }
+  .tabbtn.active{
+    background:#1a2240;
+    border-color:#4a5c9a;
+    opacity:1;
+  }
+  .tabpane{display:none}
+  .tabpane.active{display:block}
+
   /* モーダル共通 */
   .modal{display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999;}
   .modal .panel{
-    max-width:520px; width:92vw; margin:10vh auto;
+    max-width:560px; width:92vw; margin:10vh auto;
     background:#121833; border:1px solid #2a376a; border-radius:12px; padding:14px;
+  }
+
+  /* ギャンブル入力行 */
+  .gRow{
+    display:grid;
+    grid-template-columns: 1fr 110px 160px;
+    gap:10px;
+    align-items:center;
+    padding:6px 0;
+    border-bottom:1px solid #223;
+  }
+  .signBtn{
+    width:auto; padding:8px 10px; border-radius:10px;
+    border:1px solid #2a376a; background:#0f1530;
+    cursor:pointer; font-size:14px;
+  }
+  .signBtn.plus{ border-color:#1c6b42; background:#123d28; color:#a9f3c8; }
+  .signBtn.minus{ border-color:#7e3340; background:#3a1820; color:#ffc7d0; }
+  .gName{font-size:14px}
+
+  .deltaBox{
+    margin-top:10px;
+    padding:8px 10px;
+    border:1px solid #223;
+    border-radius:10px;
+    background:#0f1530;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
   }
 </style>
 </head>
@@ -76,48 +129,89 @@
   </aside>
 
   <main>
-    <section class="card" id="txFormCard">
-      <h2 id="formTitle">支出を追加</h2>
+    <!-- タブ -->
+    <div class="tabs">
+      <button class="tabbtn active" id="tabExpenseBtn">支出を追加</button>
+      <button class="tabbtn" id="tabGambleBtn">ギャンブル精算</button>
+    </div>
 
-      <div class="grid">
-        <div>
-          <label for="txDesc">説明</label>
-          <input id="txDesc" placeholder="例：銭湯、宿代、ジュース など" />
+    <!-- ===== タブ1: 支出を追加 ===== -->
+    <section class="tabpane active" id="tabExpense">
+      <section class="card" id="txFormCard">
+        <h2 id="formTitle">支出を追加</h2>
+
+        <div class="grid">
+          <div>
+            <label for="txDesc">説明</label>
+            <input id="txDesc" placeholder="例：銭湯、宿代、ジュース など" />
+          </div>
         </div>
-      </div>
 
-      <div class="grid" style="margin-top:10px">
-        <div>
-          <label for="txAmount">金額（円）</label>
-          <input id="txAmount" type="text" inputmode="decimal" placeholder="例：6500" />
+        <div class="grid" style="margin-top:10px">
+          <div>
+            <label for="txAmount">金額（円）</label>
+            <input id="txAmount" type="text" inputmode="decimal" placeholder="例：6500" />
+          </div>
+
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+              <label style="margin:0;">支払者（複数可） <span class="muted small">※空欄は均等割り</span></label>
+              <button class="btn secondary small" id="editPayerAmountsBtn" style="width:auto;padding:4px 10px">個別金額を指定</button>
+            </div>
+            <div id="payers" class="chips"></div>
+          </div>
         </div>
 
-        <div>
+        <div style="margin-top:10px">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-            <label style="margin:0;">支払者（複数可） <span class="muted small">※空欄は均等割り</span></label>
-            <button class="btn secondary small" id="editPayerAmountsBtn" style="width:auto;padding:4px 10px">個別金額を指定</button>
+            <label style="margin:0;">サービスを受けた人 <span class="muted small">※空欄は均等割り</span></label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+              <button class="btn secondary small" id="selectAllBenBtn" style="width:auto;padding:4px 10px">全員選択</button>
+              <button class="btn secondary small" id="editBenAmountsBtn" style="width:auto;padding:4px 10px">個別金額を指定</button>
+            </div>
           </div>
-          <div id="payers" class="chips"></div>
+          <div id="beneficiaries" class="chips"></div>
         </div>
-      </div>
 
-      <div style="margin-top:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-          <label style="margin:0;">サービスを受けた人 <span class="muted small">※空欄は均等割り</span></label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-            <button class="btn secondary small" id="selectAllBenBtn" style="width:auto;padding:4px 10px">全員選択</button>
-            <button class="btn secondary small" id="editBenAmountsBtn" style="width:auto;padding:4px 10px">個別金額を指定</button>
-          </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="addTxBtn">支出を追加</button>
+          <button class="btn secondary" id="clearFormBtn">入力クリア</button>
         </div>
-        <div id="beneficiaries" class="chips"></div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="addTxBtn">支出を追加</button>
-        <button class="btn secondary" id="clearFormBtn">入力クリア</button>
-      </div>
+      </section>
     </section>
 
+    <!-- ===== タブ2: ギャンブル精算 ===== -->
+    <section class="tabpane" id="tabGamble">
+      <section class="card" id="gambleCard">
+        <h2>ギャンブル精算</h2>
+
+        <div class="grid">
+          <div>
+            <label for="gDesc">説明</label>
+            <input id="gDesc" placeholder="例：麻雀1回目 / ルーレット など" />
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="muted small">
+          各メンバーの金額を入力し、勝ちは「＋」負けは「−」にしてください（合計が0円になる必要があります）。
+        </div>
+
+        <!-- ずれ表示 -->
+        <div class="deltaBox">
+          <div>合計（＋/−）のずれ：</div>
+          <div id="gDelta" style="font-weight:700;">0円</div>
+        </div>
+
+        <div id="gList" style="margin-top:10px;"></div>
+
+        <div class="row" style="margin-top:12px">
+          <button class="btn" id="addGambleBtn">精算結果を追加</button>
+          <button class="btn secondary" id="clearGambleBtn">入力クリア</button>
+        </div>
+      </section>
+    </section>
+
+    <!-- ===== 結果（既存結果 + ギャンブル結果を下に追加） ===== -->
     <section class="card">
       <h2>結果</h2>
       <table id="resultTable">
@@ -126,6 +220,16 @@
         </thead>
         <tbody></tbody>
       </table>
+
+      <div style="margin-top:14px">
+        <div style="font-size:14px;font-weight:600;">ギャンブル結果（現在の収支）</div>
+        <table id="gambleBalanceTable">
+          <thead>
+            <tr><th>名前</th><th class="right">収支</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
     <section class="card">
@@ -140,7 +244,7 @@
   </main>
 </div>
 
-<!-- 恩恵者モーダル -->
+<!-- 恩恵者モーダル（ボタン押下時のみ表示） -->
 <div id="benModal" class="modal">
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
@@ -158,7 +262,7 @@
   </div>
 </div>
 
-<!-- 支払者モーダル -->
+<!-- 支払者モーダル（ボタン押下時のみ表示） -->
 <div id="payModal" class="modal">
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
@@ -175,6 +279,29 @@
     </div>
   </div>
 </div>
+
+<!-- ギャンブル精算ポップアップ -->
+<div id="settleModal" class="modal">
+  <div class="panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <div style="font-size:16px; font-weight:600;">ギャンブル精算結果</div>
+      <!-- 右上の閉じるボタンは置かない -->
+    </div>
+
+    <div class="muted small" style="margin-top:8px;">
+      「保存して閉じる」で反映／「キャンセル」で前の画面に戻ります。
+    </div>
+
+    <div id="settleList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+
+    <div class="row" style="margin-top:12px;">
+      <button class="btn secondary" id="settleCancelBtn">キャンセル</button>
+      <button class="btn" id="settleSaveBtn">保存して閉じる</button>
+    </div>
+  </div>
+</div>
+
+
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -203,7 +330,15 @@ const byId=id=>document.getElementById(id);
 const yen=n=>Math.round(n||0).toLocaleString();
 const escapeHtml=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
 const uuid=()=>crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random().toString(16).slice(2));
+function toInt(v){
+  if(v==null) return 0;
+  const n = String(v).replace(/[^\d-]/g,"");
+  return Number.parseInt(n,10) || 0;
+}
+function openModal(el){ el.style.display="block"; }
+function closeModal(el){ el.style.display="none"; }
 
+// ===== DOM =====
 const newTripName=byId("newTripName");
 const createTripBtn=byId("createTripBtn");
 const tripSelect = byId("tripSelect");
@@ -213,43 +348,83 @@ const addMemberBtn=byId("addMemberBtn");
 const membersDiv=byId("members");
 const deleteTripBtn=byId("deleteTripBtn");
 
+const tabExpenseBtn=byId("tabExpenseBtn");
+const tabGambleBtn=byId("tabGambleBtn");
+const tabExpense=byId("tabExpense");
+const tabGamble=byId("tabGamble");
+
 const txFormCard=byId("txFormCard");
 const formTitle=byId("formTitle");
 const txDesc=byId("txDesc");
 const txAmount=byId("txAmount");
-
 const payersDiv=byId("payers");
 const beneficiariesDiv=byId("beneficiaries");
-
 const addTxBtn=byId("addTxBtn");
 const clearFormBtn=byId("clearFormBtn");
-const selectAllBenBtn = byId("selectAllBenBtn");
-const editBenAmountsBtn = byId("editBenAmountsBtn");
-const editPayerAmountsBtn = byId("editPayerAmountsBtn");
+const selectAllBenBtn=byId("selectAllBenBtn");
+const editBenAmountsBtn=byId("editBenAmountsBtn");
+const editPayerAmountsBtn=byId("editPayerAmountsBtn");
 
-const benModal = byId("benModal");
-const benModalList = byId("benModalList");
-const benModalCloseBtn = byId("benModalCloseBtn");
-const benModalSaveBtn = byId("benModalSaveBtn");
-const benModalClearBtn = byId("benModalClearBtn");
+const benModal=byId("benModal");
+const benModalList=byId("benModalList");
+const benModalCloseBtn=byId("benModalCloseBtn");
+const benModalSaveBtn=byId("benModalSaveBtn");
+const benModalClearBtn=byId("benModalClearBtn");
 
-const payModal = byId("payModal");
-const payModalList = byId("payModalList");
-const payModalCloseBtn = byId("payModalCloseBtn");
-const payModalSaveBtn = byId("payModalSaveBtn");
-const payModalClearBtn = byId("payModalClearBtn");
+const payModal=byId("payModal");
+const payModalList=byId("payModalList");
+const payModalCloseBtn=byId("payModalCloseBtn");
+const payModalSaveBtn=byId("payModalSaveBtn");
+const payModalClearBtn=byId("payModalClearBtn");
 
 const txTableBody=document.querySelector("#txTable tbody");
 const resultBody=document.querySelector("#resultTable tbody");
+
+// ギャンブル結果（収支）
+const gambleBalanceBody=document.querySelector("#gambleBalanceTable tbody");
+
+// ギャンブルUI
+const gDesc=byId("gDesc");
+const gList=byId("gList");
+const addGambleBtn=byId("addGambleBtn");
+const clearGambleBtn=byId("clearGambleBtn");
+const gDelta=byId("gDelta");
+
+// ギャンブル精算モーダル
+const settleModal = byId("settleModal");
+const settleList  = byId("settleList");
+const settleCancelBtn = byId("settleCancelBtn");
+const settleSaveBtn   = byId("settleSaveBtn");
+
+
 
 // Firestore 状態
 let tripsUnsub=null, currentTripUnsub=null;
 let tripsIndex=[], currentTripId=null, currentTripData=null;
 let editingTxId = null;
 
-// 初期化
+// ギャンブル保存待ち（モーダルで確定するまで保持）
+let pendingGambleRecord = null;
+
+// ===== 初期化 =====
 init();
-function init(){ subscribeTrips(); }
+function init(){
+  subscribeTrips();
+  bindTabs();
+}
+function bindTabs(){
+  tabExpenseBtn.addEventListener("click", ()=> setTab("expense"));
+  tabGambleBtn.addEventListener("click", ()=> setTab("gamble"));
+}
+function setTab(kind){
+  const isExpense = kind==="expense";
+  tabExpenseBtn.classList.toggle("active", isExpense);
+  tabGambleBtn.classList.toggle("active", !isExpense);
+  tabExpense.classList.toggle("active", isExpense);
+  tabGamble.classList.toggle("active", !isExpense);
+}
+
+// ===== 旅行一覧購読 =====
 tripSelect?.addEventListener("change", ()=>{ if(tripSelect.value) selectTrip(tripSelect.value); });
 
 function subscribeTrips(){
@@ -268,27 +443,26 @@ function subscribeTrips(){
 }
 
 function renderTripSelect(){
-  if(!tripSelect) return;
   const prev = tripSelect.value;
-  tripSelect.innerHTML = "";
+  tripSelect.innerHTML="";
   tripsIndex.forEach(t=>{
-    const opt = document.createElement("option");
-    opt.value = t.id;
-    opt.textContent = t.name || "(無題)";
+    const opt=document.createElement("option");
+    opt.value=t.id; opt.textContent=t.name||"(無題)";
     tripSelect.appendChild(opt);
   });
   const target = tripsIndex.find(t=>t.id===currentTripId)?.id
               || tripsIndex.find(t=>t.id===prev)?.id
               || (tripsIndex[0]?.id || "");
   if(target){
-    tripSelect.value = target;
-    if (!currentTripId || currentTripId !== target) selectTrip(target);
+    tripSelect.value=target;
+    if(!currentTripId || currentTripId!==target) selectTrip(target);
   }
 }
 
 function selectTrip(id){
   currentTripId=id;
   clearForm();
+  clearGambleForm();
   subscribeCurrentTrip(id);
 }
 
@@ -298,17 +472,28 @@ function subscribeCurrentTrip(id){
   currentTripUnsub=onSnapshot(ref,d=>{
     if(!d.exists()){ currentTripData=null; clearMainViews(); return; }
     currentTripData=d.data();
-    renderMembers(); renderPayerAndBen(); renderTx(); renderResults();
+    // 互換：古い旅行に gambleBalance がない場合
+    if(!currentTripData.gambleBalance) currentTripData.gambleBalance = {};
+    if(!currentTripData.gamble) currentTripData.gamble = [];
+
+    renderMembers();
+    renderPayerAndBen();
+    renderTx();
+    renderResults();
+    renderGambleForm();
+    renderGambleBalance();
   });
 }
 
 function clearMainViews(){
   membersDiv.innerHTML=""; payersDiv.innerHTML=""; beneficiariesDiv.innerHTML="";
   txTableBody.innerHTML=""; resultBody.innerHTML="";
+  gambleBalanceBody.innerHTML="";
+  gList.innerHTML="";
 }
 
+// ===== メンバー表示 =====
 function renderMembers(){
-  if(!currentTripData) return;
   membersDiv.innerHTML="";
   (currentTripData.members||[]).forEach(m=>{
     const span=document.createElement("span");
@@ -321,26 +506,22 @@ function renderMembers(){
   });
 }
 
+// ===== 支払者・恩恵者 =====
 function renderPayerAndBen(){
-  if(!currentTripData) return;
-
-  // 状態保存
-  const currentFormState = { payers: [], bens: [] };
+  const state={payers:[], bens:[]};
   payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-    if(cb.checked) currentFormState.payers.push({name:cb.value, amount: cb.dataset.amount});
+    if(cb.checked) state.payers.push({name:cb.value, amount:cb.dataset.amount});
   });
   beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-    if(cb.checked) currentFormState.bens.push({name:cb.value, amount: cb.dataset.amount});
+    if(cb.checked) state.bens.push({name:cb.value, amount:cb.dataset.amount});
   });
 
-  // 支払者：メンバーのみ（= 経済は出ない）
+  // 支払者：メンバーのみ（経済なし）
   payersDiv.innerHTML="";
   (currentTripData.members||[]).forEach(name=>{
     const label=document.createElement("label"); label.className="chip";
     const cb=document.createElement("input");
-    cb.type="checkbox"; cb.value=name;
-    cb.checked=false;
-    cb.dataset.amount="";
+    cb.type="checkbox"; cb.value=name; cb.checked=false; cb.dataset.amount="";
     cb.addEventListener("change", ()=>{ if(!cb.checked) cb.dataset.amount=""; });
     label.appendChild(cb); label.append(" "+name);
     payersDiv.appendChild(label);
@@ -348,41 +529,33 @@ function renderPayerAndBen(){
 
   // 恩恵者：メンバー + 経済
   beneficiariesDiv.innerHTML="";
-  const benList = [...(currentTripData.members||[]), ECON];
+  const benList=[...(currentTripData.members||[]), ECON];
   benList.forEach(name=>{
     const label=document.createElement("label"); label.className="chip";
     const cb=document.createElement("input");
-    cb.type="checkbox"; cb.value=name;
-    cb.checked=false;
-    cb.dataset.amount="";
+    cb.type="checkbox"; cb.value=name; cb.checked=false; cb.dataset.amount="";
     cb.addEventListener("change", ()=>{ if(!cb.checked) cb.dataset.amount=""; });
     label.appendChild(cb); label.append(" "+name);
     beneficiariesDiv.appendChild(label);
   });
 
-  restoreFormState(currentFormState);
-}
-
-function restoreFormState(state){
   const isInit = (state.payers.length===0 && state.bens.length===0 && !editingTxId);
-
   payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
     if(isInit){ cb.checked=false; cb.dataset.amount=""; return; }
-    const hit = state.payers.find(x=>x.name===cb.value);
-    cb.checked = !!hit;
+    const hit=state.payers.find(x=>x.name===cb.value);
+    cb.checked=!!hit;
     cb.dataset.amount = hit?.amount ? String(toInt(hit.amount)) : "";
   });
-
   beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
     if(isInit){ cb.checked=false; cb.dataset.amount=""; return; }
-    const hit = state.bens.find(x=>x.name===cb.value);
-    cb.checked = !!hit;
+    const hit=state.bens.find(x=>x.name===cb.value);
+    cb.checked=!!hit;
     cb.dataset.amount = hit?.amount ? String(toInt(hit.amount)) : "";
   });
 }
 
+// ===== 支出一覧 =====
 function renderTx(){
-  if(!currentTripData) return;
   const tx=[...(currentTripData.tx||[])].reverse();
   txTableBody.innerHTML="";
   tx.forEach(t=>{
@@ -411,8 +584,8 @@ function renderTx(){
   };
 }
 
+// ===== 結果 =====
 function renderResults(){
-  if(!currentTripData) return;
   const members=currentTripData.members||[];
   const tx=currentTripData.tx||[];
 
@@ -427,23 +600,21 @@ function renderResults(){
                   : (t.payer ? [t.payer] : []);
     if(payers.length===0) continue;
 
-    const payerAmounts = t.payerAmounts || {};
+    const payerAmounts=t.payerAmounts||{};
     let sumFixedPay=0;
     const fixedPayers=[];
     for(const p of payers){
-      const v = payerAmounts?.[p];
+      const v=payerAmounts?.[p];
       if(v){
         paid[p]=(paid[p]||0)+Number(v);
         sumFixedPay+=Number(v);
         fixedPayers.push(p);
       }
     }
-    const remainPay = amount - sumFixedPay;
-    const othersPay = payers.filter(p=>!fixedPayers.includes(p));
-    const sharePay = othersPay.length ? remainPay / othersPay.length : 0;
-    for(const p of othersPay){
-      paid[p]=(paid[p]||0)+sharePay;
-    }
+    const remainPay=amount-sumFixedPay;
+    const othersPay=payers.filter(p=>!fixedPayers.includes(p));
+    const sharePay=othersPay.length ? remainPay/othersPay.length : 0;
+    for(const p of othersPay) paid[p]=(paid[p]||0)+sharePay;
 
     // 恩恵者（経済は集計対象外）
     const benMembers=(t.ben||[]).filter(b=>members.includes(b));
@@ -458,12 +629,10 @@ function renderResults(){
           fixedTargets.push(b);
         }
       }
-      const remainBen=amount - sumFixedBen;
+      const remainBen=amount-sumFixedBen;
       const othersBen=benMembers.filter(b=>!fixedTargets.includes(b));
       const shareBen=othersBen.length ? remainBen/othersBen.length : 0;
-      for(const b of othersBen){
-        fair[b]=(fair[b]||0)+shareBen;
-      }
+      for(const b of othersBen) fair[b]=(fair[b]||0)+shareBen;
     }
   }
 
@@ -481,10 +650,265 @@ function renderResults(){
   });
 }
 
-// ===== 操作系 =====
+// ===== ギャンブル入力フォーム描画 =====
+function renderGambleForm(){
+  const members=currentTripData.members||[];
+  gList.innerHTML="";
+
+  const head=document.createElement("div");
+  head.className="gRow";
+  head.style.fontWeight="600";
+  head.style.opacity=".9";
+  head.innerHTML=`<div>名前</div><div>勝敗</div><div>金額</div>`;
+  gList.appendChild(head);
+
+  members.forEach(name=>{
+    const row=document.createElement("div");
+    row.className="gRow";
+
+    const nameDiv=document.createElement("div");
+    nameDiv.className="gName";
+    nameDiv.textContent=name;
+
+    const signBtn=document.createElement("button");
+    signBtn.type="button";
+    signBtn.className="signBtn plus";
+    signBtn.textContent="＋（勝）";
+    signBtn.dataset.sign="+";
+    signBtn.addEventListener("click", ()=>{
+      const s=signBtn.dataset.sign==="+" ? "-" : "+";
+      signBtn.dataset.sign=s;
+      signBtn.classList.toggle("plus", s==="+");
+      signBtn.classList.toggle("minus", s==="-");
+      signBtn.textContent = (s==="+") ? "＋（勝）" : "−（負）";
+      updateGambleDelta();
+    });
+
+    const amount=document.createElement("input");
+    amount.type="text";
+    amount.inputMode="decimal";
+    amount.placeholder="例：1000";
+    amount.dataset.name=name;
+    amount.addEventListener("input", updateGambleDelta);
+
+    row.appendChild(nameDiv);
+    row.appendChild(signBtn);
+    row.appendChild(amount);
+    gList.appendChild(row);
+  });
+
+  updateGambleDelta();
+}
+
+function clearGambleForm(){
+  gDesc.value="";
+  if(gList) {
+    gList.querySelectorAll('input[data-name]').forEach(inp=> inp.value="");
+    gList.querySelectorAll('button.signBtn').forEach(btn=>{
+      btn.dataset.sign="+";
+      btn.classList.add("plus"); btn.classList.remove("minus");
+      btn.textContent="＋（勝）";
+    });
+  }
+  updateGambleDelta();
+}
+clearGambleBtn?.addEventListener("click", clearGambleForm);
+
+function readGambleEntries(){
+  const members = currentTripData?.members || [];
+  const entries = {};
+  let sum = 0;
+
+  const rows = [...gList.querySelectorAll(".gRow")].slice(1);
+  rows.forEach(r=>{
+    const inp = r.querySelector('input[data-name]');
+    const btn = r.querySelector('button.signBtn');
+    if(!inp || !btn) return;
+
+    const name = inp.dataset.name;
+    const abs = toInt(inp.value);
+    const sign = btn.dataset.sign || "+";
+    const val = (sign === "-" ? -abs : abs);
+
+    entries[name] = val;
+    sum += val;
+  });
+
+  const cleaned = {};
+  members.forEach(m => cleaned[m] = Number(entries[m] || 0));
+  return { entries: cleaned, sum };
+}
+
+function updateGambleDelta(){
+  if(!gDelta || !currentTripData) return;
+  const { sum } = readGambleEntries();
+  // sum が 0 なら OK。ズレは sum のまま表示。
+  const v = sum;
+  const pillClass = (v===0) ? "plus" : (v>0 ? "plus" : "minus");
+  gDelta.innerHTML = `<span class="pill ${pillClass}">${v>=0?"+":""}${yen(v)}円</span>`;
+}
+
+// ===== ギャンブル精算（ポップアップ表示） =====
+addGambleBtn?.addEventListener("click", ()=>{
+  if(!currentTripData || !currentTripId) return;
+
+  const members=currentTripData.members||[];
+  const desc=(gDesc.value||"").trim() || "（無題）";
+
+  const { entries, sum } = readGambleEntries();
+
+  if(Object.values(entries).every(v=>v===0)){
+    alert("1人以上、金額を入力してください");
+    return;
+  }
+  if(sum!==0){
+    alert(`合計が0円ではありません（現在：${yen(sum)}円）。勝ち（＋）と負け（−）の合計が0になるように入力してください。`);
+    return;
+  }
+
+  const transfers = computeTransfers(entries, members);
+
+  settleList.innerHTML="";
+  if(transfers.length===0){
+    const div=document.createElement("div");
+    div.className="muted";
+    div.textContent="支払いは発生しません。";
+    settleList.appendChild(div);
+  } else {
+    transfers.forEach(t=>{
+      const div=document.createElement("div");
+      div.innerHTML = `<span class="pill minus">${escapeHtml(t.from)}</span> → <span class="pill plus">${escapeHtml(t.to)}</span>　<span style="font-weight:600">${yen(t.amount)}円</span>`;
+      settleList.appendChild(div);
+    });
+  }
+
+  pendingGambleRecord = {
+    id: uuid(),
+    desc,
+    entries,
+    transfers
+  };
+
+  openModal(settleModal);
+});
+
+// ===== ギャンブル精算モーダル操作 =====
+
+// 「キャンセル」＝保存せず戻る
+settleCancelBtn?.addEventListener("click", ()=>{
+  pendingGambleRecord = null;
+  closeModal(settleModal);
+});
+
+// 背景クリックでもキャンセル扱いで戻る（不要ならこのブロックを消してOK）
+settleModal?.addEventListener("click", (e)=>{
+  if(e.target === settleModal){
+    pendingGambleRecord = null;
+    closeModal(settleModal);
+  }
+});
+
+
+settleSaveBtn?.addEventListener("click", async ()=>{
+  if(!pendingGambleRecord || !currentTripData || !currentTripId) return;
+
+  // 1) ギャンブル結果の「現在の収支」に加算
+  const members = currentTripData.members || [];
+  const curBal = {...(currentTripData.gambleBalance||{})};
+  members.forEach(m => { if(curBal[m]==null) curBal[m]=0; });
+
+  for(const m of members){
+    curBal[m] = Number(curBal[m]||0) + Number(pendingGambleRecord.entries?.[m]||0);
+  }
+
+  // 2) 支出一覧（tx）へ「誰が誰にいくら」形式で追加
+  //   例：A→B 100円 なら 支払者A, 恩恵者B, 金額100
+  const txList = [...(currentTripData.tx||[])];
+
+  for(const tr of (pendingGambleRecord.transfers||[])){
+    if(!tr.amount || tr.amount<=0) continue;
+    txList.push({
+      id: uuid(),
+      desc: `（ギャンブル）${pendingGambleRecord.desc}`,
+      amount: Number(tr.amount),
+      payers: [tr.from],
+      payer: tr.from,
+      payerAmounts: {}, // 使わない
+      ben: [tr.to],
+      benAmounts: {}    // 使わない（1対1なので均等でも同じ）
+    });
+  }
+
+  // 3) ログとして gamble も残す（任意。履歴を消したいならここは外してOK）
+  const gambleLog=[...(currentTripData.gamble||[])];
+  gambleLog.push(pendingGambleRecord);
+
+  try{
+    await updateDoc(doc(db,"trips",currentTripId),{
+      gambleBalance: curBal,
+      tx: txList,
+      gamble: gambleLog
+    });
+    pendingGambleRecord=null;
+    closeModal(settleModal);
+    clearGambleForm();
+    setTab("expense");
+  }catch(e){
+    console.error(e);
+    alert("保存に失敗しました");
+  }
+});
+
+// 誰→誰の支払いを作る（勝者へ、敗者から）
+function computeTransfers(entries, members){
+  const creditors=[]; // {name, amt}
+  const debtors=[];   // {name, amt} amtは正の支払い額
+  members.forEach(m=>{
+    const v=Number(entries[m]||0);
+    if(v>0) creditors.push({name:m, amt:v});
+    else if(v<0) debtors.push({name:m, amt:-v});
+  });
+
+  const transfers=[];
+  let i=0,j=0;
+  while(i<debtors.length && j<creditors.length){
+    const d=debtors[i];
+    const c=creditors[j];
+    const x=Math.min(d.amt, c.amt);
+    if(x>0){
+      transfers.push({from:d.name, to:c.name, amount: Math.round(x)});
+      d.amt-=x;
+      c.amt-=x;
+    }
+    if(d.amt<=0.000001) i++;
+    if(c.amt<=0.000001) j++;
+  }
+  return transfers;
+}
+
+// ===== ギャンブル結果（現在の収支）表示 =====
+function renderGambleBalance(){
+  const members = currentTripData.members || [];
+  const bal = currentTripData.gambleBalance || {};
+
+  gambleBalanceBody.innerHTML="";
+  members.forEach(m=>{
+    const v = Math.round(Number(bal[m]||0));
+    const tr=document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(m)}</td>
+      <td class="right"><span class="pill ${v>=0?"plus":"minus"}">${v>=0?"+":""}${yen(v)}</span></td>
+    `;
+    gambleBalanceBody.appendChild(tr);
+  });
+}
+
+// ===== 支出操作 =====
 createTripBtn.addEventListener("click", async ()=>{
   const name=(newTripName.value||"").trim()||"新しい旅行";
-  const ref = await addDoc(collection(db,"trips"),{ name, members:[], tx:[], createdAt:serverTimestamp() });
+  const ref = await addDoc(collection(db,"trips"),{
+    name, members:[], tx:[], gamble:[], gambleBalance:{}, createdAt:serverTimestamp()
+  });
   selectTrip(ref.id);
   newTripName.value="";
 });
@@ -493,26 +917,41 @@ renameTripBtn.addEventListener("click", async ()=>{
   if(!currentTripId || !currentTripData) return;
   const curName = currentTripData.name || "";
   const newName = prompt("新しい旅行名を入力してください", curName);
-  if(newName && newName !== curName) await updateDoc(doc(db, "trips", currentTripId), { name: newName });
+  if(newName && newName !== curName) {
+    await updateDoc(doc(db, "trips", currentTripId), { name: newName });
+  }
 });
 
 addMemberBtn.addEventListener("click", async ()=>{
   if(!currentTripData || !currentTripId) return;
   const m=(memberName.value||"").trim();
   if(!m) return;
+
   const members=[...(currentTripData.members||[])];
   if(members.includes(m)) { memberName.value=""; return; }
   members.push(m);
 
-  await setDoc(doc(db,"trips",currentTripId),{
-    ...currentTripData,
-    members,
-    tx: (currentTripData.tx||[]).map(t=>({
-      ...t,
-      ben: (t.ben||[]).filter(b=>members.includes(b) || b===ECON),
-      payers: (t.payers|| (t.payer?[t.payer]:[])).filter(p=>members.includes(p)),
-    }))
+  // tx の整合
+  const tx = (currentTripData.tx||[]).map(t=>({
+    ...t,
+    ben: (t.ben||[]).filter(b=>members.includes(b) || b===ECON),
+    payers: (t.payers|| (t.payer?[t.payer]:[])).filter(p=>members.includes(p)),
+    payerAmounts: cleanMapByMembers(t.payerAmounts||{}, members),
+    benAmounts: cleanMapByMembers(t.benAmounts||{}, [...members, ECON])
+  }));
+
+  // gamble の整合
+  const gamble = (currentTripData.gamble||[]).map(g=>{
+    const entries = cleanMapByMembers(g.entries||{}, members);
+    const transfers = (g.transfers||[]).filter(t=>members.includes(t.from) && members.includes(t.to));
+    return { ...g, entries, transfers };
   });
+
+  // gambleBalance の整合
+  const gambleBalance = {...(currentTripData.gambleBalance||{})};
+  members.forEach(x => { if(gambleBalance[x]==null) gambleBalance[x]=0; });
+
+  await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, members, tx, gamble, gambleBalance });
   memberName.value="";
 });
 
@@ -524,13 +963,14 @@ deleteTripBtn.addEventListener("click", async ()=>{
   clearMainViews();
 });
 
+// 支出追加/更新
 addTxBtn.addEventListener("click", async ()=>{
   if(!currentTripData || !currentTripId) return;
 
   const desc=(txDesc.value||"").trim();
   const amount = toInt(txAmount.value);
 
-  // 支払者（経済はそもそも出ない）
+  // 支払者
   const payers = [];
   const payerAmounts = {};
   payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
@@ -540,7 +980,7 @@ addTxBtn.addEventListener("click", async ()=>{
     }
   });
 
-  // 恩恵者（経済あり）
+  // 恩恵者
   const ben = [];
   const benAmounts = {};
   beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
@@ -603,7 +1043,6 @@ async function deleteTx(id){
 }
 
 function startEditTx(id) {
-  if(!currentTripData) return;
   const t = (currentTripData.tx||[]).find(x => x.id === id);
   if(!t) return;
 
@@ -632,34 +1071,74 @@ function startEditTx(id) {
     cb.dataset.amount = (on && benAmounts[cb.value]) ? String(toInt(benAmounts[cb.value])) : "";
   });
 
+  setTab("expense");
   txFormCard.scrollIntoView({ behavior: "smooth" });
 }
 
 async function removeMember(name){
-  if(!currentTripData || !currentTripId) return;
   if(!confirm(`${name} をメンバーから削除しますか？`)) return;
+
   const members=(currentTripData.members||[]).filter(m=>m!==name);
 
+  // tx
   const tx=(currentTripData.tx||[]).map(t=>{
     const payers = (t.payers || (t.payer?[t.payer]:[])).filter(p=>p!==name);
     const ben = (t.ben||[]).filter(b=>b!==name);
-
     const payerAmounts = {...(t.payerAmounts||{})}; delete payerAmounts[name];
     const benAmounts = {...(t.benAmounts||{})}; delete benAmounts[name];
-
     if(payers.length===0) return null;
     return { ...t, payers, payer:payers[0], ben, payerAmounts, benAmounts };
   }).filter(Boolean);
 
-  await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, members, tx });
+  // gamble log
+  const gamble=(currentTripData.gamble||[]).map(g=>{
+    const entries = {...(g.entries||{})};
+    delete entries[name];
+    const transfers = (g.transfers||[]).filter(t=>t.from!==name && t.to!==name);
+    return { ...g, entries, transfers };
+  });
+
+  // gambleBalance
+  const gambleBalance = {...(currentTripData.gambleBalance||{})};
+  delete gambleBalance[name];
+
+  await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, members, tx, gamble, gambleBalance });
 }
 
-// ===== 恩恵者モーダル =====
+// ===== 個別金額モーダル（支払者/恩恵者） =====
 editBenAmountsBtn?.addEventListener("click", openBenAmountModal);
 benModalCloseBtn?.addEventListener("click", ()=> closeModal(benModal));
 benModal?.addEventListener("click", (e)=>{ if(e.target === benModal) closeModal(benModal); });
 benModalClearBtn?.addEventListener("click", ()=>{ benModalList.querySelectorAll('input[data-name]').forEach(inp=> inp.value = ""); });
 benModalSaveBtn?.addEventListener("click", saveBenAmountModal);
+
+editPayerAmountsBtn?.addEventListener("click", openPayerAmountModal);
+payModalCloseBtn?.addEventListener("click", ()=> closeModal(payModal));
+payModal?.addEventListener("click", (e)=>{ if(e.target === payModal) closeModal(payModal); });
+payModalClearBtn?.addEventListener("click", ()=>{ payModalList.querySelectorAll('input[data-name]').forEach(inp=> inp.value = ""); });
+payModalSaveBtn?.addEventListener("click", savePayerAmountModal);
+
+function makeAmountRow(name, cur){
+  const row = document.createElement("div");
+  row.style.display = "grid";
+  row.style.gridTemplateColumns = "1fr 160px";
+  row.style.gap = "10px";
+  row.style.alignItems = "center";
+
+  const left = document.createElement("div");
+  left.textContent = name;
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.inputMode = "decimal";
+  input.placeholder = "空欄=均等割り";
+  input.value = cur ? String(cur) : "";
+  input.setAttribute("data-name", name);
+
+  row.appendChild(left);
+  row.appendChild(input);
+  return row;
+}
 
 function openBenAmountModal(){
   const checked = [];
@@ -679,13 +1158,6 @@ function saveBenAmountModal(){
   });
   closeModal(benModal);
 }
-
-// ===== 支払者モーダル =====
-editPayerAmountsBtn?.addEventListener("click", openPayerAmountModal);
-payModalCloseBtn?.addEventListener("click", ()=> closeModal(payModal));
-payModal?.addEventListener("click", (e)=>{ if(e.target === payModal) closeModal(payModal); });
-payModalClearBtn?.addEventListener("click", ()=>{ payModalList.querySelectorAll('input[data-name]').forEach(inp=> inp.value = ""); });
-payModalSaveBtn?.addEventListener("click", savePayerAmountModal);
 
 function openPayerAmountModal(){
   const checked = [];
@@ -714,35 +1186,13 @@ selectAllBenBtn?.addEventListener("click", ()=>{
   });
 });
 
-// 共通
-function makeAmountRow(name, cur){
-  const row = document.createElement("div");
-  row.style.display = "grid";
-  row.style.gridTemplateColumns = "1fr 160px";
-  row.style.gap = "10px";
-  row.style.alignItems = "center";
-
-  const left = document.createElement("div");
-  left.textContent = name;
-
-  const input = document.createElement("input");
-  input.type = "text";
-  input.inputMode = "decimal";
-  input.placeholder = "空欄=均等割り";
-  input.value = cur ? String(cur) : "";
-  input.setAttribute("data-name", name);
-
-  row.appendChild(left);
-  row.appendChild(input);
-  return row;
-}
-function openModal(el){ el.style.display = "block"; }
-function closeModal(el){ el.style.display = "none"; }
-
-function toInt(v){
-  if(v==null) return 0;
-  const n = String(v).replace(/[^\d-]/g,"");
-  return Number.parseInt(n,10) || 0;
+// ===== その他 =====
+function cleanMapByMembers(map, allowed){
+  const out={};
+  Object.keys(map||{}).forEach(k=>{
+    if(allowed.includes(k)) out[k]=map[k];
+  });
+  return out;
 }
 
 function clearForm(){
@@ -754,7 +1204,6 @@ function clearForm(){
 
   txDesc.value = "";
   txAmount.value = "";
-
   payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; cb.dataset.amount = ""; });
   beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; cb.dataset.amount = ""; });
 }
