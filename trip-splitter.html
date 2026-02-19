@@ -34,15 +34,12 @@
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   @media(max-width:780px){.grid{grid-template-columns:1fr}}
   .small{font-size:12px}
-  .editing-mode input { border-color: #4a5c9a; background: #1a2240; }
+  .editing-mode input, .editing-mode select { border-color: #4a5c9a; background: #1a2240; }
   .editing-mode #addTxBtn { background: #2a376a; border-color: #4a5c9a; }
   input:focus::placeholder, textarea:focus::placeholder{ opacity: 0; }
 
-  /* タブ（Excelシート風） */
-  .tabs{
-    display:flex; gap:8px; flex-wrap:wrap;
-    margin:0 0 12px 0;
-  }
+  /* タブ */
+  .tabs{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px 0;}
   .tabbtn{
     width:auto; padding:8px 12px;
     border-radius:999px;
@@ -52,15 +49,11 @@
     font-size:13px;
     opacity:.9;
   }
-  .tabbtn.active{
-    background:#1a2240;
-    border-color:#4a5c9a;
-    opacity:1;
-  }
+  .tabbtn.active{background:#1a2240;border-color:#4a5c9a;opacity:1;}
   .tabpane{display:none}
   .tabpane.active{display:block}
 
-  /* モーダル共通 */
+  /* モーダル */
   .modal{display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999;}
   .modal .panel{
     max-width:560px; width:92vw; margin:10vh auto;
@@ -84,7 +77,6 @@
   .signBtn.plus{ border-color:#1c6b42; background:#123d28; color:#a9f3c8; }
   .signBtn.minus{ border-color:#7e3340; background:#3a1820; color:#ffc7d0; }
   .gName{font-size:14px}
-
   .deltaBox{
     margin-top:10px;
     padding:8px 10px;
@@ -97,6 +89,60 @@
     flex-wrap:wrap;
     align-items:center;
   }
+
+  /* 支出一覧ソート */
+  .sortbar{
+    display:flex; gap:10px; flex-wrap:wrap;
+    margin-top:10px;
+    align-items:center;
+  }
+  .sortbar .label{font-size:12px;opacity:.85}
+  .sortbar select{
+    width:auto;
+    padding:8px 10px;
+    font-size:13px;
+  }
+
+  /* 総収支（大きめ表示） */
+  .totalNetBox{
+    margin-top:12px;
+    padding:10px 12px;
+    border:1px solid #223;
+    border-radius:12px;
+    background:#0f1530;
+  }
+  .totalNetTitle{font-size:13px;opacity:.9;font-weight:700;margin-bottom:8px}
+  .totalNetChips{
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  }
+  .totalNetChips .chipline{
+    display:flex; gap:8px; align-items:center;
+    padding:8px 10px;
+    border:1px solid #223;
+    border-radius:999px;
+    background:#121833;
+    font-size:15px;
+    font-weight:700;
+  }
+
+  /* ヘッダ内フィルタ */
+  .thFlex{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
+  .thFlex .thTitle{font-weight:700}
+  .thFlex select{
+    width:auto;
+    padding:6px 8px;
+    font-size:12px;
+    border-radius:10px;
+  }
+
+  /* detailsの三角を消す（見た目だけ） */
+  summary::-webkit-details-marker{display:none}
 </style>
 </head>
 <body>
@@ -129,18 +175,27 @@
   </aside>
 
   <main>
-    <!-- タブ -->
     <div class="tabs">
       <button class="tabbtn active" id="tabExpenseBtn">支出を追加</button>
       <button class="tabbtn" id="tabGambleBtn">ギャンブル精算</button>
     </div>
 
-    <!-- ===== タブ1: 支出を追加 ===== -->
+    <!-- タブ1 -->
     <section class="tabpane active" id="tabExpense">
       <section class="card" id="txFormCard">
         <h2 id="formTitle">支出を追加</h2>
 
         <div class="grid">
+          <div>
+            <label for="txType">種類</label>
+            <select id="txType">
+              <option value="交通費">交通費</option>
+              <option value="宿代">宿代</option>
+              <option value="食費">食費</option>
+              <option value="物代">物代</option>
+              <option value="交際費">交際費</option>
+            </select>
+          </div>
           <div>
             <label for="txDesc">説明</label>
             <input id="txDesc" placeholder="例：銭湯、宿代、ジュース など" />
@@ -180,10 +235,10 @@
       </section>
     </section>
 
-    <!-- ===== タブ2: ギャンブル精算 ===== -->
+    <!-- タブ2 -->
     <section class="tabpane" id="tabGamble">
       <section class="card" id="gambleCard">
-        <h2>ギャンブル精算</h2>
+        <h2 id="gambleTitle">ギャンブル精算</h2>
 
         <div class="grid">
           <div>
@@ -196,7 +251,6 @@
           各メンバーの金額を入力し、勝ちは「＋」負けは「−」にしてください（合計が0円になる必要があります）。
         </div>
 
-        <!-- ずれ表示 -->
         <div class="deltaBox">
           <div>合計（＋/−）のずれ：</div>
           <div id="gDelta" style="font-weight:700;">0円</div>
@@ -211,15 +265,21 @@
       </section>
     </section>
 
-    <!-- ===== 結果（既存結果 + ギャンブル結果を下に追加） ===== -->
+    <!-- 結果 -->
     <section class="card">
       <h2>結果</h2>
+      <div class="muted small" style="margin-top:-4px;">
+        「勝敗」は支出の差額のみで計算します（ギャンブル収支は下に表示、さらに総収支を表示します）。
+      </div>
+
       <table id="resultTable">
         <thead>
           <tr><th>名前</th><th class="right">使用額</th><th class="right">支払額</th><th class="right">勝敗</th></tr>
         </thead>
         <tbody></tbody>
       </table>
+
+      <div id="econTotalLine" class="muted" style="margin-top:10px;font-size:24px;font-weight:800;"></div>
 
       <div style="margin-top:14px">
         <div style="font-size:14px;font-weight:600;">ギャンブル結果（現在の収支）</div>
@@ -229,22 +289,93 @@
           </thead>
           <tbody></tbody>
         </table>
+
+        <div class="totalNetBox">
+          <div class="totalNetTitle">総収支（支出＋ギャンブル）</div>
+          <div id="totalNetChips" class="totalNetChips"></div>
+        </div>
       </div>
     </section>
 
+    <!-- 支出一覧（開閉） -->
     <section class="card">
-      <h2>支出一覧</h2>
-      <table id="txTable">
-        <thead>
-          <tr><th>説明</th><th class="right">金額</th><th>支払者</th><th>恩恵者</th><th>操作</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <details open id="txDetails">
+        <summary style="cursor:pointer;font-weight:700;list-style:none;">
+          支出一覧 <span class="muted small" style="font-weight:400;margin-left:8px;">（クリックで開閉）</span>
+        </summary>
+
+        <!-- ★ソート（プルダウン：選択したら即反映） -->
+        <div class="sortbar">
+          <span class="label">ソート：</span>
+          <select id="txSortSelect">
+            <option value="createdDesc">新しい順</option>
+            <option value="createdAsc">古い順</option>
+            <option value="amountDesc">金額の大きい順</option>
+            <option value="amountAsc">金額の小さい順</option>
+          </select>
+        </div>
+
+        <table id="txTable">
+          <thead>
+            <tr>
+              <th>
+                <div class="thFlex">
+                  <span class="thTitle">種類</span>
+                  <select id="txFilterType">
+                    <option value="">全て</option>
+                  </select>
+                </div>
+              </th>
+              <th>説明</th>
+              <th class="right">金額</th>
+              <th>
+                <div class="thFlex">
+                  <span class="thTitle">支払者</span>
+                  <select id="txFilterPayer">
+                    <option value="">全て</option>
+                  </select>
+                </div>
+              </th>
+              <th>
+                <div class="thFlex">
+                  <span class="thTitle">恩恵者</span>
+                  <select id="txFilterBen">
+                    <option value="">全て</option>
+                  </select>
+                </div>
+              </th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </details>
     </section>
+
+    <!-- ギャンブル集計一覧（開閉） -->
+    <section class="card">
+      <details open id="gambleDetails">
+        <summary style="cursor:pointer;font-weight:700;list-style:none;">
+          ギャンブル集計一覧 <span class="muted small" style="font-weight:400;margin-left:8px;">（クリックで開閉）</span>
+        </summary>
+
+        <div class="muted small" style="margin-top:6px;">
+          「誰が誰にいくら支払うか」の一覧です（編集・削除すると、ギャンブル収支に反映されます）。
+        </div>
+
+        <table id="gambleTable">
+          <thead>
+            <tr><th>説明</th><th>支払い（誰 → 誰 / 金額）</th><th class="right">操作</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </details>
+    </section>
+
   </main>
 </div>
 
-<!-- 恩恵者モーダル（ボタン押下時のみ表示） -->
+<!-- 恩恵者モーダル -->
 <div id="benModal" class="modal">
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
@@ -262,7 +393,7 @@
   </div>
 </div>
 
-<!-- 支払者モーダル（ボタン押下時のみ表示） -->
+<!-- 支払者モーダル -->
 <div id="payModal" class="modal">
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
@@ -285,7 +416,6 @@
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
       <div style="font-size:16px; font-weight:600;">ギャンブル精算結果</div>
-      <!-- 右上の閉じるボタンは置かない -->
     </div>
 
     <div class="muted small" style="margin-top:8px;">
@@ -300,8 +430,6 @@
     </div>
   </div>
 </div>
-
-
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -324,6 +452,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const ECON = "経済";
+const TX_TYPES = ["交通費","宿代","食費","物代","交際費"];
+const DEFAULT_TX_TYPE = "食費";
+
+/**
+ * 端末内で覚えるキー（端末ごと）
+ */
+const LS_LAST_TRIP_KEY = "tripApp:lastTripId";
 
 // ユーティリティ
 const byId=id=>document.getElementById(id);
@@ -337,6 +472,7 @@ function toInt(v){
 }
 function openModal(el){ el.style.display="block"; }
 function closeModal(el){ el.style.display="none"; }
+function normStr(s){ return String(s||"").trim().toLowerCase(); }
 
 // ===== DOM =====
 const newTripName=byId("newTripName");
@@ -355,6 +491,7 @@ const tabGamble=byId("tabGamble");
 
 const txFormCard=byId("txFormCard");
 const formTitle=byId("formTitle");
+const txType=byId("txType");
 const txDesc=byId("txDesc");
 const txAmount=byId("txAmount");
 const payersDiv=byId("payers");
@@ -382,8 +519,13 @@ const resultBody=document.querySelector("#resultTable tbody");
 
 // ギャンブル結果（収支）
 const gambleBalanceBody=document.querySelector("#gambleBalanceTable tbody");
+const totalNetChips=byId("totalNetChips");
+
+// ギャンブル集計一覧
+const gambleTableBody=document.querySelector("#gambleTable tbody");
 
 // ギャンブルUI
+const gambleTitle=byId("gambleTitle");
 const gDesc=byId("gDesc");
 const gList=byId("gList");
 const addGambleBtn=byId("addGambleBtn");
@@ -396,22 +538,63 @@ const settleList  = byId("settleList");
 const settleCancelBtn = byId("settleCancelBtn");
 const settleSaveBtn   = byId("settleSaveBtn");
 
+// 支出一覧ソートUI（即反映）
+const txSortSelect = byId("txSortSelect");
 
+// 支出一覧フィルタUI（即反映）
+const txFilterType = byId("txFilterType");
+const txFilterPayer = byId("txFilterPayer");
+const txFilterBen = byId("txFilterBen");
 
 // Firestore 状態
 let tripsUnsub=null, currentTripUnsub=null;
 let tripsIndex=[], currentTripId=null, currentTripData=null;
 let editingTxId = null;
 
-// ギャンブル保存待ち（モーダルで確定するまで保持）
+// ギャンブル編集状態
+let editingGambleId = null;
+
+// ギャンブル保存待ち
 let pendingGambleRecord = null;
+
+/**
+ * ★全端末共通の「最後に開いた旅行」 (認証なしのため全員共通になります)
+ */
+let lastTripUnsub = null;
+let remoteLastTripId = null;
+
+// 支出一覧：ソート/絞り込み状態
+let txSortKey = "createdDesc";
+let txFilters = { type:"", payer:"", ben:"" };
 
 // ===== 初期化 =====
 init();
 function init(){
+  subscribeLastTripState();
   subscribeTrips();
   bindTabs();
+
+  // ソート：選択即反映
+  txSortSelect?.addEventListener("change", ()=>{
+    txSortKey = txSortSelect.value || "createdDesc";
+    renderTx();
+  });
+
+  // フィルタ：選択即反映（全てAND）
+  txFilterType?.addEventListener("change", ()=>{
+    txFilters.type = txFilterType.value || "";
+    renderTx();
+  });
+  txFilterPayer?.addEventListener("change", ()=>{
+    txFilters.payer = txFilterPayer.value || "";
+    renderTx();
+  });
+  txFilterBen?.addEventListener("change", ()=>{
+    txFilters.ben = txFilterBen.value || "";
+    renderTx();
+  });
 }
+
 function bindTabs(){
   tabExpenseBtn.addEventListener("click", ()=> setTab("expense"));
   tabGambleBtn.addEventListener("click", ()=> setTab("gamble"));
@@ -424,6 +607,16 @@ function setTab(kind){
   tabGamble.classList.toggle("active", !isExpense);
 }
 
+// ===== ★ 最後に開いた旅行ID（Firestore）を購読 =====
+function subscribeLastTripState(){
+  if(lastTripUnsub) lastTripUnsub();
+  const ref = doc(db, "appState", "lastTrip");
+  lastTripUnsub = onSnapshot(ref, (d)=>{
+    remoteLastTripId = d.exists() ? (d.data().tripId || null) : null;
+    if(tripsIndex && tripsIndex.length) renderTripSelect();
+  });
+}
+
 // ===== 旅行一覧購読 =====
 tripSelect?.addEventListener("change", ()=>{ if(tripSelect.value) selectTrip(tripSelect.value); });
 
@@ -433,55 +626,100 @@ function subscribeTrips(){
   tripsUnsub=onSnapshot(q,snap=>{
     tripsIndex=snap.docs.map(d=>({id:d.id,name:d.data().name||"(無題)"}));
     renderTripSelect();
-    if(!currentTripId && tripsIndex[0]) selectTrip(tripsIndex[0].id);
-    else if(currentTripId && !tripsIndex.find(t=>t.id===currentTripId)){
-      currentTripId=null;
-      if(tripsIndex[0]) selectTrip(tripsIndex[0].id);
-      else clearMainViews();
-    }
   });
 }
 
 function renderTripSelect(){
   const prev = tripSelect.value;
+  const lastLocal = localStorage.getItem(LS_LAST_TRIP_KEY);
+
   tripSelect.innerHTML="";
   tripsIndex.forEach(t=>{
     const opt=document.createElement("option");
     opt.value=t.id; opt.textContent=t.name||"(無題)";
     tripSelect.appendChild(opt);
   });
-  const target = tripsIndex.find(t=>t.id===currentTripId)?.id
-              || tripsIndex.find(t=>t.id===prev)?.id
-              || (tripsIndex[0]?.id || "");
-  if(target){
-    tripSelect.value=target;
-    if(!currentTripId || currentTripId!==target) selectTrip(target);
+
+  const target =
+      tripsIndex.find(t=>t.id===remoteLastTripId)?.id
+   || tripsIndex.find(t=>t.id===lastLocal)?.id
+   || tripsIndex.find(t=>t.id===currentTripId)?.id
+   || tripsIndex.find(t=>t.id===prev)?.id
+   || (tripsIndex[0]?.id || "");
+
+  if(!target){
+    clearMainViews();
+    return;
+  }
+
+  tripSelect.value = target;
+
+  if(currentTripId !== target){
+    selectTrip(target);
   }
 }
 
-function selectTrip(id){
+async function selectTrip(id){
   currentTripId=id;
+  localStorage.setItem(LS_LAST_TRIP_KEY, id);
+
+  try{
+    await setDoc(doc(db,"appState","lastTrip"), {
+      tripId: id,
+      updatedAt: serverTimestamp()
+    }, { merge:true });
+  }catch(e){
+    console.error(e);
+  }
+
   clearForm();
-  clearGambleForm();
+  clearGambleForm(true);
+
+  // フィルタ状態を初期化（旅行切替時）
+  txFilters = { type:"", payer:"", ben:"" };
+  if(txFilterType) txFilterType.value = "";
+  if(txFilterPayer) txFilterPayer.value = "";
+  if(txFilterBen) txFilterBen.value = "";
+
   subscribeCurrentTrip(id);
 }
 
 function subscribeCurrentTrip(id){
   if(currentTripUnsub) currentTripUnsub();
   const ref=doc(db,"trips",id);
-  currentTripUnsub=onSnapshot(ref,d=>{
+  currentTripUnsub=onSnapshot(ref, async d=>{
     if(!d.exists()){ currentTripData=null; clearMainViews(); return; }
     currentTripData=d.data();
-    // 互換：古い旅行に gambleBalance がない場合
-    if(!currentTripData.gambleBalance) currentTripData.gambleBalance = {};
+
+    if(!currentTripData.tx) currentTripData.tx = [];
     if(!currentTripData.gamble) currentTripData.gamble = [];
+    if(!currentTripData.gambleBalance) currentTripData.gambleBalance = {};
+
+    // gambleBalance は履歴から再計算して整合
+    const members = currentTripData.members || [];
+    const correctBal = recomputeGambleBalance(currentTripData.gamble || [], members);
+    const needFix = !shallowEqualNumberMap(correctBal, currentTripData.gambleBalance || {}, members);
+    if(needFix){
+      try{
+        await updateDoc(doc(db,"trips",currentTripId),{ gambleBalance: correctBal });
+      }catch(e){
+        console.error(e);
+      }
+      currentTripData.gambleBalance = correctBal;
+    }
 
     renderMembers();
     renderPayerAndBen();
+
+    // 支出一覧のフィルタ選択肢を更新（選択中は維持）
+    updateTxFilterOptions();
+
     renderTx();
-    renderResults();
+    renderResults();        // 支出のみの勝敗
     renderGambleForm();
-    renderGambleBalance();
+    renderGambleBalance();  // ギャンブル収支
+    renderTotalNet();       // 総収支（支出＋ギャンブル）
+    renderGambleListTable();
   });
 }
 
@@ -489,6 +727,8 @@ function clearMainViews(){
   membersDiv.innerHTML=""; payersDiv.innerHTML=""; beneficiariesDiv.innerHTML="";
   txTableBody.innerHTML=""; resultBody.innerHTML="";
   gambleBalanceBody.innerHTML="";
+  if(totalNetChips) totalNetChips.innerHTML="";
+  gambleTableBody.innerHTML="";
   gList.innerHTML="";
 }
 
@@ -554,14 +794,115 @@ function renderPayerAndBen(){
   });
 }
 
-// ===== 支出一覧 =====
+// ===== 支出一覧：フィルタ選択肢 =====
+function rebuildSelectOptions(sel, options, keepValue){
+  if(!sel) return;
+  const cur = keepValue ?? sel.value ?? "";
+  sel.innerHTML = "";
+  const optAll=document.createElement("option");
+  optAll.value=""; optAll.textContent="全て";
+  sel.appendChild(optAll);
+
+  options.forEach(v=>{
+    const o=document.createElement("option");
+    o.value=v; o.textContent=v;
+    sel.appendChild(o);
+  });
+
+  // 現在値が選択肢にない場合は全てに戻す
+  const exists = Array.from(sel.options).some(o=>o.value===cur);
+  sel.value = exists ? cur : "";
+}
+
+function updateTxFilterOptions(){
+  const members = currentTripData?.members || [];
+  const tx = currentTripData?.tx || [];
+
+  // 種類：TX_TYPES + 既存の未知タイプも拾う（念のため）
+  const typeSet = new Set(TX_TYPES);
+  tx.forEach(t=>{
+    if(t?.type) typeSet.add(String(t.type));
+  });
+  const types = Array.from(typeSet).filter(Boolean);
+
+  // 支払者：メンバーのみ
+  const payers = [...members];
+
+  // 恩恵者：メンバー + 経済
+  const bens = [...members, ECON];
+
+  rebuildSelectOptions(txFilterType, types, txFilters.type);
+  rebuildSelectOptions(txFilterPayer, payers, txFilters.payer);
+  rebuildSelectOptions(txFilterBen, bens, txFilters.ben);
+
+  // state反映（無効になってたら全てに）
+  txFilters.type = txFilterType?.value || "";
+  txFilters.payer = txFilterPayer?.value || "";
+  txFilters.ben = txFilterBen?.value || "";
+}
+
+// ===== 支出一覧：フィルタ + ソート =====
+function applyTxFilters(list){
+  const members=currentTripData?.members||[];
+  const fType = txFilters.type || "";
+  const fPayer = txFilters.payer || "";
+  const fBen = txFilters.ben || "";
+
+  return list.filter(t=>{
+    // 種類
+    if(fType){
+      if(String(t.type||"") !== fType) return false;
+    }
+
+    // 支払者（複数のうちに含まれるか）
+    if(fPayer){
+      const payers = (t.payers && t.payers.length) ? t.payers : (t.payer ? [t.payer] : []);
+      const p2 = payers.filter(p=>members.includes(p));
+      if(!p2.includes(fPayer)) return false;
+    }
+
+    // 恩恵者（複数のうちに含まれるか：経済も含む）
+    if(fBen){
+      const ben = (t.ben || []);
+      if(!ben.includes(fBen)) return false;
+    }
+
+    return true;
+  });
+}
+
+function sortTxList(list, key){
+  const withIdx = list.map((t,idx)=>({t, idx}));
+  const num = (v)=> Number(v||0);
+
+  const cmpNum = (a,b)=> (a<b?-1:a>b?1:0);
+
+  const cmp = (a,b)=>{
+    const A=a.t, B=b.t;
+    switch(key){
+      case "createdAsc":  return a.idx - b.idx;
+      case "createdDesc": return b.idx - a.idx;
+      case "amountAsc":   return cmpNum(num(A.amount), num(B.amount)) || (a.idx-b.idx);
+      case "amountDesc":  return cmpNum(num(B.amount), num(A.amount)) || (a.idx-b.idx);
+      default: return b.idx - a.idx;
+    }
+  };
+
+  return withIdx.sort(cmp).map(x=>x.t);
+}
+
 function renderTx(){
-  const tx=[...(currentTripData.tx||[])].reverse();
+  const txRaw = [...(currentTripData.tx||[])]; // 追加順（古→新）
+  const filtered = applyTxFilters(txRaw);
+  const tx = sortTxList(filtered, txSortKey);
+
   txTableBody.innerHTML="";
   tx.forEach(t=>{
-    const payers = t.payers && t.payers.length ? t.payers : (t.payer ? [t.payer] : []);
+    const payers = (t.payers && t.payers.length) ? t.payers : (t.payer ? [t.payer] : []);
+    const type = t.type || "（未設定）";
     const tr=document.createElement("tr");
     tr.innerHTML=`
+      <td>${escapeHtml(type)}</td>
       <td>${escapeHtml(t.desc||"")}</td>
       <td class="right">${yen(t.amount)}</td>
       <td>${payers.join(", ")}</td>
@@ -584,18 +925,19 @@ function renderTx(){
   };
 }
 
-// ===== 結果 =====
-function renderResults(){
+// ===== 支出集計（共通計算：支出のみ） =====
+function computeExpenseStats(){
   const members=currentTripData.members||[];
   const tx=currentTripData.tx||[];
 
-  const fair=Object.fromEntries(members.map(m=>[m,0]));
-  const paid=Object.fromEntries(members.map(m=>[m,0]));
+  const fair=Object.fromEntries(members.map(m=>[m,0])); // 使用額
+  const paid=Object.fromEntries(members.map(m=>[m,0])); // 支払額
+  let econTotal = 0;
 
   for(const t of tx){
     const amount=Number(t.amount)||0;
 
-    // 支払者（固定額→残り均等割り）
+    // 支払者
     const payers = (t.payers && t.payers.length) ? t.payers.filter(p=>members.includes(p))
                   : (t.payer ? [t.payer] : []);
     if(payers.length===0) continue;
@@ -616,43 +958,95 @@ function renderResults(){
     const sharePay=othersPay.length ? remainPay/othersPay.length : 0;
     for(const p of othersPay) paid[p]=(paid[p]||0)+sharePay;
 
-    // 恩恵者（経済は集計対象外）
-    const benMembers=(t.ben||[]).filter(b=>members.includes(b));
-    if(benMembers.length){
-      let sumFixedBen=0;
-      const fixedTargets=[];
-      for(const b of benMembers){
-        const val=t.benAmounts?.[b];
-        if(val){
-          fair[b]=(fair[b]||0)+Number(val);
-          sumFixedBen+=Number(val);
-          fixedTargets.push(b);
-        }
+    // 恩恵者（メンバー＋経済）
+    const benList = (t.ben || []).filter(b => members.includes(b) || b === ECON);
+    if(benList.length === 0) continue;
+
+    const benAmounts = t.benAmounts || {};
+    let sumFixedBen = 0;
+    benList.forEach(b=>{
+      const v = Number(benAmounts?.[b] || 0);
+      if(v > 0) sumFixedBen += v;
+    });
+
+    const remainBen = amount - sumFixedBen;
+    const flex = benList.filter(b => !(Number(benAmounts?.[b] || 0) > 0));
+    const shareBen = flex.length ? (remainBen / flex.length) : 0;
+
+    benList.forEach(b=>{
+      const fixed = Number(benAmounts?.[b] || 0);
+      const alloc = (fixed > 0) ? fixed : shareBen;
+
+      if(members.includes(b)){
+        fair[b] = (fair[b]||0) + alloc;
+      }else if(b === ECON){
+        econTotal += alloc;
       }
-      const remainBen=amount-sumFixedBen;
-      const othersBen=benMembers.filter(b=>!fixedTargets.includes(b));
-      const shareBen=othersBen.length ? remainBen/othersBen.length : 0;
-      for(const b of othersBen) fair[b]=(fair[b]||0)+shareBen;
-    }
+    });
   }
+
+  // 支出勝敗（支出の差額）
+  const expenseNet = Object.fromEntries(members.map(m=>{
+    const f=Math.round(fair[m]||0);
+    const p=Math.round(paid[m]||0);
+    return [m, Math.round(f - p)];
+  }));
+
+  return { members, fair, paid, econTotal, expenseNet };
+}
+
+// ===== 結果（支出のみ） =====
+function renderResults(){
+  const { members, fair, paid, econTotal, expenseNet } = computeExpenseStats();
 
   resultBody.innerHTML="";
   members.forEach(m=>{
     const f=Math.round(fair[m]||0);
     const p=Math.round(paid[m]||0);
-    const d=f-p;
+    const net = Math.round(expenseNet[m]||0);
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${m}</td>
+    tr.innerHTML=`<td>${escapeHtml(m)}</td>
       <td class="right">${yen(f)}</td>
       <td class="right">${yen(p)}</td>
-      <td class="right"><span class="pill ${d>=0?"plus":"minus"}">${d>=0?"+":""}${yen(d)}</span></td>`;
+      <td class="right"><span class="pill ${net>=0?"plus":"minus"}">${net>=0?"+":""}${yen(net)}</span></td>`;
     resultBody.appendChild(tr);
+  });
+
+  const econLine = byId("econTotalLine");
+  if(econLine){
+    econLine.innerHTML = `経済に回した合計：<span style="font-size:18px;font-weight:900;">${yen(Math.round(econTotal))}円</span>`;
+  }
+}
+
+// ===== 総収支（支出＋ギャンブル） =====
+function renderTotalNet(){
+  if(!totalNetChips) return;
+  const { members, expenseNet } = computeExpenseStats();
+  const gb = currentTripData.gambleBalance || {};
+
+  totalNetChips.innerHTML="";
+  members.forEach(m=>{
+    const g = Math.round(Number(gb[m]||0));
+    const e = Math.round(Number(expenseNet[m]||0));
+    const t = Math.round(e + g);
+
+    const div=document.createElement("div");
+    div.className="chipline";
+    div.innerHTML = `
+      <span>${escapeHtml(m)}</span>
+      <span class="pill ${t>=0?"plus":"minus"}" style="font-size:14px;padding:4px 10px;">
+        ${t>=0?"+":""}${yen(t)}
+      </span>
+    `;
+    totalNetChips.appendChild(div);
   });
 }
 
-// ===== ギャンブル入力フォーム描画 =====
+// ===== ギャンブル入力フォーム =====
 function renderGambleForm(){
-  const members=currentTripData.members||[];
+  const members=currentTripData?.members||[];
+  if(!gList) return;
+
   gList.innerHTML="";
 
   const head=document.createElement("div");
@@ -700,7 +1094,19 @@ function renderGambleForm(){
   updateGambleDelta();
 }
 
-function clearGambleForm(){
+function setGambleEditMode(on){
+  if(on){
+    gambleTitle.textContent = "ギャンブル精算（編集）";
+    addGambleBtn.textContent = "精算結果を更新";
+    clearGambleBtn.textContent = "キャンセル";
+  }else{
+    gambleTitle.textContent = "ギャンブル精算";
+    addGambleBtn.textContent = "精算結果を追加";
+    clearGambleBtn.textContent = "入力クリア";
+  }
+}
+
+function clearGambleForm(resetMode=false){
   gDesc.value="";
   if(gList) {
     gList.querySelectorAll('input[data-name]').forEach(inp=> inp.value="");
@@ -711,8 +1117,19 @@ function clearGambleForm(){
     });
   }
   updateGambleDelta();
+
+  if(resetMode){
+    editingGambleId = null;
+    setGambleEditMode(false);
+  }
 }
-clearGambleBtn?.addEventListener("click", clearGambleForm);
+clearGambleBtn?.addEventListener("click", ()=>{
+  if(editingGambleId){
+    editingGambleId=null;
+    setGambleEditMode(false);
+  }
+  clearGambleForm(false);
+});
 
 function readGambleEntries(){
   const members = currentTripData?.members || [];
@@ -739,10 +1156,29 @@ function readGambleEntries(){
   return { entries: cleaned, sum };
 }
 
+function applyEntriesToForm(entries){
+  const rows = [...gList.querySelectorAll(".gRow")].slice(1);
+  rows.forEach(r=>{
+    const inp = r.querySelector('input[data-name]');
+    const btn = r.querySelector('button.signBtn');
+    if(!inp || !btn) return;
+    const name = inp.dataset.name;
+    const v = Number(entries?.[name] || 0);
+    const sign = v < 0 ? "-" : "+";
+    const abs = Math.abs(Math.round(v));
+
+    btn.dataset.sign = sign;
+    btn.classList.toggle("plus", sign==="+");
+    btn.classList.toggle("minus", sign==="-");
+    btn.textContent = (sign==="+") ? "＋（勝）" : "−（負）";
+    inp.value = abs ? String(abs) : "";
+  });
+  updateGambleDelta();
+}
+
 function updateGambleDelta(){
   if(!gDelta || !currentTripData) return;
   const { sum } = readGambleEntries();
-  // sum が 0 なら OK。ズレは sum のまま表示。
   const v = sum;
   const pillClass = (v===0) ? "plus" : (v>0 ? "plus" : "minus");
   gDelta.innerHTML = `<span class="pill ${pillClass}">${v>=0?"+":""}${yen(v)}円</span>`;
@@ -783,7 +1219,7 @@ addGambleBtn?.addEventListener("click", ()=>{
   }
 
   pendingGambleRecord = {
-    id: uuid(),
+    id: editingGambleId || uuid(),
     desc,
     entries,
     transfers
@@ -792,15 +1228,10 @@ addGambleBtn?.addEventListener("click", ()=>{
   openModal(settleModal);
 });
 
-// ===== ギャンブル精算モーダル操作 =====
-
-// 「キャンセル」＝保存せず戻る
 settleCancelBtn?.addEventListener("click", ()=>{
   pendingGambleRecord = null;
   closeModal(settleModal);
 });
-
-// 背景クリックでもキャンセル扱いで戻る（不要ならこのブロックを消してOK）
 settleModal?.addEventListener("click", (e)=>{
   if(e.target === settleModal){
     pendingGambleRecord = null;
@@ -808,50 +1239,34 @@ settleModal?.addEventListener("click", (e)=>{
   }
 });
 
-
 settleSaveBtn?.addEventListener("click", async ()=>{
   if(!pendingGambleRecord || !currentTripData || !currentTripId) return;
 
-  // 1) ギャンブル結果の「現在の収支」に加算
   const members = currentTripData.members || [];
-  const curBal = {...(currentTripData.gambleBalance||{})};
-  members.forEach(m => { if(curBal[m]==null) curBal[m]=0; });
+  const gambleList = [...(currentTripData.gamble || [])];
 
-  for(const m of members){
-    curBal[m] = Number(curBal[m]||0) + Number(pendingGambleRecord.entries?.[m]||0);
+  const idx = gambleList.findIndex(g => g.id === pendingGambleRecord.id);
+  if(idx !== -1){
+    gambleList[idx] = pendingGambleRecord;
+  }else{
+    gambleList.push(pendingGambleRecord);
   }
 
-  // 2) 支出一覧（tx）へ「誰が誰にいくら」形式で追加
-  //   例：A→B 100円 なら 支払者A, 恩恵者B, 金額100
-  const txList = [...(currentTripData.tx||[])];
-
-  for(const tr of (pendingGambleRecord.transfers||[])){
-    if(!tr.amount || tr.amount<=0) continue;
-    txList.push({
-      id: uuid(),
-      desc: `（ギャンブル）${pendingGambleRecord.desc}`,
-      amount: Number(tr.amount),
-      payers: [tr.from],
-      payer: tr.from,
-      payerAmounts: {}, // 使わない
-      ben: [tr.to],
-      benAmounts: {}    // 使わない（1対1なので均等でも同じ）
-    });
-  }
-
-  // 3) ログとして gamble も残す（任意。履歴を消したいならここは外してOK）
-  const gambleLog=[...(currentTripData.gamble||[])];
-  gambleLog.push(pendingGambleRecord);
+  const newBal = recomputeGambleBalance(gambleList, members);
 
   try{
     await updateDoc(doc(db,"trips",currentTripId),{
-      gambleBalance: curBal,
-      tx: txList,
-      gamble: gambleLog
+      gamble: gambleList,
+      gambleBalance: newBal
     });
+
     pendingGambleRecord=null;
     closeModal(settleModal);
-    clearGambleForm();
+
+    editingGambleId = null;
+    setGambleEditMode(false);
+
+    clearGambleForm(false);
     setTab("expense");
   }catch(e){
     console.error(e);
@@ -859,10 +1274,9 @@ settleSaveBtn?.addEventListener("click", async ()=>{
   }
 });
 
-// 誰→誰の支払いを作る（勝者へ、敗者から）
 function computeTransfers(entries, members){
-  const creditors=[]; // {name, amt}
-  const debtors=[];   // {name, amt} amtは正の支払い額
+  const creditors=[];
+  const debtors=[];
   members.forEach(m=>{
     const v=Number(entries[m]||0);
     if(v>0) creditors.push({name:m, amt:v});
@@ -886,7 +1300,7 @@ function computeTransfers(entries, members){
   return transfers;
 }
 
-// ===== ギャンブル結果（現在の収支）表示 =====
+// ===== ギャンブル収支表示 =====
 function renderGambleBalance(){
   const members = currentTripData.members || [];
   const bal = currentTripData.gambleBalance || {};
@@ -903,13 +1317,102 @@ function renderGambleBalance(){
   });
 }
 
+// ===== ギャンブル集計一覧 =====
+function renderGambleListTable(){
+  const list = [...(currentTripData.gamble||[])].reverse();
+  gambleTableBody.innerHTML="";
+
+  list.forEach(g=>{
+    const payments = (g.transfers||[]).map(t=>`${escapeHtml(t.from)} → ${escapeHtml(t.to)} ${yen(t.amount)}円`).join("<br>") || "支払いなし";
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${escapeHtml(g.desc||"（無題）")}</td>
+      <td>${payments}</td>
+      <td class="right">
+        <div style="display:flex;gap:4px;justify-content:flex-end">
+          <button class="btn small secondary" data-gedit="${g.id}">編集</button>
+          <button class="btn small danger" data-gdel="${g.id}">削除</button>
+        </div>
+      </td>
+    `;
+    gambleTableBody.appendChild(tr);
+  });
+
+  gambleTableBody.onclick = (e)=>{
+    const delBtn = e.target.closest("button[data-gdel]");
+    if(delBtn) deleteGamble(delBtn.dataset.gdel);
+
+    const editBtn = e.target.closest("button[data-gedit]");
+    if(editBtn) startEditGamble(editBtn.dataset.gedit);
+  };
+}
+
+function startEditGamble(id){
+  const g = (currentTripData.gamble||[]).find(x=>x.id===id);
+  if(!g) return;
+
+  editingGambleId = id;
+  setGambleEditMode(true);
+
+  gDesc.value = g.desc || "";
+  setTab("gamble");
+  applyEntriesToForm(g.entries || {});
+  byId("gambleCard").scrollIntoView({ behavior:"smooth" });
+}
+
+async function deleteGamble(id){
+  if(!currentTripData || !currentTripId) return;
+  if(!confirm("このギャンブル精算を削除しますか？")) return;
+
+  const members = currentTripData.members || [];
+  const gambleList = (currentTripData.gamble||[]).filter(g=>g.id!==id);
+  const newBal = recomputeGambleBalance(gambleList, members);
+
+  if(editingGambleId === id){
+    editingGambleId = null;
+    setGambleEditMode(false);
+    clearGambleForm(false);
+  }
+
+  await updateDoc(doc(db,"trips",currentTripId),{
+    gamble: gambleList,
+    gambleBalance: newBal
+  });
+}
+
+// ===== 収支再計算 =====
+function recomputeGambleBalance(gambleList, members){
+  const bal = Object.fromEntries((members||[]).map(m=>[m,0]));
+  (gambleList||[]).forEach(g=>{
+    const entries = g.entries || {};
+    (members||[]).forEach(m=>{
+      bal[m] = Number(bal[m]||0) + Number(entries[m]||0);
+    });
+  });
+  return bal;
+}
+function shallowEqualNumberMap(a,b,members){
+  const ms = members || [];
+  for(const m of ms){
+    const av = Number(a?.[m]||0);
+    const bv = Number(b?.[m]||0);
+    if(av !== bv) return false;
+  }
+  return true;
+}
+
 // ===== 支出操作 =====
 createTripBtn.addEventListener("click", async ()=>{
   const name=(newTripName.value||"").trim()||"新しい旅行";
   const ref = await addDoc(collection(db,"trips"),{
-    name, members:[], tx:[], gamble:[], gambleBalance:{}, createdAt:serverTimestamp()
+    name,
+    members:[],
+    tx:[],
+    gamble:[],
+    gambleBalance:{},
+    createdAt:serverTimestamp()
   });
-  selectTrip(ref.id);
+  await selectTrip(ref.id);
   newTripName.value="";
 });
 
@@ -931,7 +1434,6 @@ addMemberBtn.addEventListener("click", async ()=>{
   if(members.includes(m)) { memberName.value=""; return; }
   members.push(m);
 
-  // tx の整合
   const tx = (currentTripData.tx||[]).map(t=>({
     ...t,
     ben: (t.ben||[]).filter(b=>members.includes(b) || b===ECON),
@@ -940,19 +1442,21 @@ addMemberBtn.addEventListener("click", async ()=>{
     benAmounts: cleanMapByMembers(t.benAmounts||{}, [...members, ECON])
   }));
 
-  // gamble の整合
   const gamble = (currentTripData.gamble||[]).map(g=>{
     const entries = cleanMapByMembers(g.entries||{}, members);
+    members.forEach(x=>{ if(entries[x]==null) entries[x]=0; });
     const transfers = (g.transfers||[]).filter(t=>members.includes(t.from) && members.includes(t.to));
     return { ...g, entries, transfers };
   });
 
-  // gambleBalance の整合
-  const gambleBalance = {...(currentTripData.gambleBalance||{})};
-  members.forEach(x => { if(gambleBalance[x]==null) gambleBalance[x]=0; });
+  const gambleBalance = recomputeGambleBalance(gamble, members);
 
   await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, members, tx, gamble, gambleBalance });
   memberName.value="";
+
+  // フィルタ選択肢更新
+  updateTxFilterOptions();
+  renderTx();
 });
 
 deleteTripBtn.addEventListener("click", async ()=>{
@@ -967,6 +1471,7 @@ deleteTripBtn.addEventListener("click", async ()=>{
 addTxBtn.addEventListener("click", async ()=>{
   if(!currentTripData || !currentTripId) return;
 
+  const type = (txType?.value || DEFAULT_TX_TYPE);
   const desc=(txDesc.value||"").trim();
   const amount = toInt(txAmount.value);
 
@@ -1003,6 +1508,7 @@ addTxBtn.addEventListener("click", async ()=>{
 
   const txObj = {
     id: editingTxId || uuid(),
+    type,
     desc,
     amount,
     payers,
@@ -1026,6 +1532,10 @@ addTxBtn.addEventListener("click", async ()=>{
   try {
     await updateDoc(doc(db,"trips",currentTripId),{ tx: newTxList });
     clearForm();
+
+    // 追加/更新後：フィルタ候補を更新して再描画
+    updateTxFilterOptions();
+    renderTx();
   } catch (e) {
     console.error(e);
     alert("保存に失敗しました");
@@ -1040,6 +1550,11 @@ async function deleteTx(id){
   const tx=(currentTripData.tx||[]).filter(t=>t.id!==id);
   if(editingTxId === id) clearForm();
   await updateDoc(doc(db,"trips",currentTripId),{ tx });
+
+  // 削除後：フィルタ候補を更新して再描画
+  //（snapshotで呼ばれるが、体感を良くするため）
+  updateTxFilterOptions();
+  renderTx();
 }
 
 function startEditTx(id) {
@@ -1051,6 +1566,9 @@ function startEditTx(id) {
   formTitle.textContent = "支出を編集";
   addTxBtn.textContent = "支出を更新";
   clearFormBtn.textContent = "キャンセル";
+
+  const curType = (t.type && TX_TYPES.includes(t.type)) ? t.type : DEFAULT_TX_TYPE;
+  if(txType) txType.value = curType;
 
   txDesc.value = t.desc || "";
   txAmount.value = t.amount;
@@ -1080,7 +1598,6 @@ async function removeMember(name){
 
   const members=(currentTripData.members||[]).filter(m=>m!==name);
 
-  // tx
   const tx=(currentTripData.tx||[]).map(t=>{
     const payers = (t.payers || (t.payer?[t.payer]:[])).filter(p=>p!==name);
     const ben = (t.ben||[]).filter(b=>b!==name);
@@ -1090,7 +1607,6 @@ async function removeMember(name){
     return { ...t, payers, payer:payers[0], ben, payerAmounts, benAmounts };
   }).filter(Boolean);
 
-  // gamble log
   const gamble=(currentTripData.gamble||[]).map(g=>{
     const entries = {...(g.entries||{})};
     delete entries[name];
@@ -1098,14 +1614,16 @@ async function removeMember(name){
     return { ...g, entries, transfers };
   });
 
-  // gambleBalance
-  const gambleBalance = {...(currentTripData.gambleBalance||{})};
-  delete gambleBalance[name];
+  const gambleBalance = recomputeGambleBalance(gamble, members);
 
   await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, members, tx, gamble, gambleBalance });
+
+  // フィルタ選択肢更新（支払者/恩恵者候補が変わる）
+  updateTxFilterOptions();
+  renderTx();
 }
 
-// ===== 個別金額モーダル（支払者/恩恵者） =====
+// ===== 個別金額モーダル =====
 editBenAmountsBtn?.addEventListener("click", openBenAmountModal);
 benModalCloseBtn?.addEventListener("click", ()=> closeModal(benModal));
 benModal?.addEventListener("click", (e)=>{ if(e.target === benModal) closeModal(benModal); });
@@ -1186,7 +1704,7 @@ selectAllBenBtn?.addEventListener("click", ()=>{
   });
 });
 
-// ===== その他 =====
+// その他
 function cleanMapByMembers(map, allowed){
   const out={};
   Object.keys(map||{}).forEach(k=>{
@@ -1202,6 +1720,7 @@ function clearForm(){
   addTxBtn.textContent = "支出を追加";
   clearFormBtn.textContent = "入力クリア";
 
+  if(txType) txType.value = DEFAULT_TX_TYPE;
   txDesc.value = "";
   txAmount.value = "";
   payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; cb.dataset.amount = ""; });
