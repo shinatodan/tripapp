@@ -6,11 +6,7 @@
 <title>旅行清算アプリ</title>
 <style>
   * { box-sizing: border-box; }
-  :root{
-    --gap:12px;
-    --radius:14px;
-    --tap: 48px;
-  }
+  :root{--gap:12px;--radius:14px;--tap:48px}
 
   body{
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
@@ -23,37 +19,22 @@
   .wrap{display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px}
   @media(max-width:900px){.wrap{grid-template-columns:1fr}}
 
-  .card{
-    background:#121833;border:1px solid #1e2646;border-radius:var(--radius);
-    padding:16px
-  }
+  .card{background:#121833;border:1px solid #1e2646;border-radius:var(--radius);padding:16px}
   .card h2{font-size:16px;margin:0 0 8px 0}
 
   label{display:block;font-size:13px;margin-top:10px;opacity:.9}
   input,select,button,textarea{
-    width:100%;
-    min-height:var(--tap);
-    padding:12px 12px;
-    border-radius:12px;
-    border:1px solid #2a376a;
-    background:#0f1530;color:#eef0f6;
-    font-size:16px;
+    width:100%;min-height:var(--tap);
+    padding:12px 12px;border-radius:12px;border:1px solid #2a376a;
+    background:#0f1530;color:#eef0f6;font-size:16px;
   }
   input[type="checkbox"]{width:auto;min-height:auto;margin-right:8px}
   .row{display:flex;gap:var(--gap)}
   .row > *{flex:1}
-  @media(max-width:780px){
-    .row{flex-direction:column}
-    .row > *{flex:unset}
-  }
+  @media(max-width:780px){.row{flex-direction:column}.row>*{flex:unset}}
 
-  .chip{
-    display:inline-flex;align-items:center;gap:6px;
-    border:1px solid #2a376a;background:#0f1530;
-    border-radius:999px;padding:10px 12px;margin:4px 6px 0 0;font-size:14px
-  }
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #2a376a;background:#0f1530;border-radius:999px;padding:10px 12px;margin:4px 6px 0 0;font-size:14px}
   .chips{margin-top:6px}
-
   .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px}
   .pill.plus{background:#123d28;border:1px solid #1c6b42;color:#a9f3c8}
   .pill.minus{background:#3a1820;border:1px solid #7e3340;color:#ffc7d0}
@@ -69,6 +50,9 @@
 
   .editing-mode input, .editing-mode select { border-color: #4a5c9a; background: #1a2240; }
   .editing-mode #addTxBtn { background: #2a376a; border-color: #4a5c9a; }
+
+  /* 説明入力のplaceholderはフォーカスで消す */
+  input:focus::placeholder, textarea:focus::placeholder { opacity: 0; }
 
   /* タブ */
   .tabs{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 12px 0;}
@@ -139,102 +123,89 @@
     align-items:center;
   }
   .sortbar select{width:auto}
-  @media(max-width:780px){
-    .sortbar select{width:100%}
-  }
+  @media(max-width:780px){ .sortbar select{width:100%} }
 
-  /* 省略しない（説明・支払者・恩恵者は全部表示） */
-  .wrapText{
-    white-space:normal;
-    overflow:visible;
-    text-overflow:clip;
-    word-break:break-word;
-  }
-
-  /* カード一覧（スマホっぽく） */
-  .listCards{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    margin-top:12px;
-  }
-  .itemCard{
-    border:1px solid #223;
-    background:#0f1530;
-    border-radius:16px;
-    padding:12px;
-  }
-  .itemTop{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-  .itemTitle{
-    display:flex;
-    gap:8px;
-    align-items:center;
-    flex-wrap:wrap;
-    font-weight:700;
-  }
-  .itemAmount{
-    font-size:18px;
-    font-weight:900;
-  }
-  .itemMeta{
-    margin-top:10px;
-    display:grid;
-    grid-template-columns: 84px 1fr;
-    gap:8px 10px;
-    align-items:start;
-    font-size:14px;
-  }
-  .itemMeta .k{
-    opacity:.85;
-    font-weight:700;
-  }
-  .itemActions{
-    margin-top:12px;
-    display:flex;
-    gap:10px;
-    flex-wrap:nowrap;        /* 横固定 */
-  }
-  .actionBtn{
-    flex:1;
-    min-height:var(--tap);
-    border-radius:14px;
-    font-size:16px;
-    padding:12px 12px;
-  }
+  .wrapText{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word}
+  .listCards{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+  .itemCard{border:1px solid #223;background:#0f1530;border-radius:16px;padding:12px}
+  .itemTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .itemTitle{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:700}
+  .itemAmount{font-size:18px;font-weight:900}
+  .itemMeta{margin-top:10px;display:grid;grid-template-columns:84px 1fr;gap:8px 10px;align-items:start;font-size:14px}
+  .itemMeta .k{opacity:.85;font-weight:700}
+  .itemActions{margin-top:12px;display:flex;gap:10px;flex-wrap:nowrap}
+  .actionBtn{flex:1;min-height:var(--tap);border-radius:14px;font-size:16px;padding:12px 12px}
   .actionBtn.secondary{background:#121833;border-color:#2a376a}
   .actionBtn.danger{background:#2a0f18;border-color:#6a2a3a}
+  .descTap{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 
-  /* フィルタ（ヘッダ行の代わり） */
-  .filtersGrid{
-    display:grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap:10px;
-    margin-top:10px;
-  }
-  @media(max-width:780px){
-    .filtersGrid{grid-template-columns:1fr}
-  }
+  .filtersGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+  @media(max-width:780px){.filtersGrid{grid-template-columns:1fr}}
 
-  /* テーブル（結果だけは維持） */
-  .tableWrap{
-    width:100%;
-    overflow:auto;
-    -webkit-overflow-scrolling: touch;
-    border:1px solid #223;
-    border-radius:14px;
-    background:#0f1530;
-    margin-top:10px;
-  }
+  .tableWrap{width:100%;overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid #223;border-radius:14px;background:#0f1530;margin-top:10px}
   table{width:100%;border-collapse:collapse;table-layout:auto}
   th,td{border-bottom:1px solid #223;padding:10px;text-align:left;vertical-align:top}
   .right{text-align:right}
   summary::-webkit-details-marker{display:none}
+
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  @media(max-width:480px){ .kv{grid-template-columns:1fr} }
+  .miniTable{width:100%;border-collapse:collapse;border:1px solid #223;border-radius:12px;overflow:hidden;background:#0f1530}
+  .miniTable th,.miniTable td{border-bottom:1px solid #223;padding:10px;font-size:14px}
+  .miniTable th{opacity:.9;text-align:left}
+  .miniTable td.right{text-align:right}
+
+  /* =========================
+     ★追加：左の「旅行/メンバー」パネルを折りたたみ
+     - デフォルトは閉じる
+     - 閉じても「現在の旅行名」は見える
+     ========================= */
+  .tripPanel{padding:14px}
+  .tripPanelHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .tripPanelTitle{
+    font-size:14px;
+    font-weight:800;
+    opacity:.95;
+  }
+  .tripPanelCurrent{
+    margin-top:10px;
+    padding:10px 12px;
+    border:1px solid #223;
+    border-radius:14px;
+    background:#0f1530;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .tripPanelCurrent .name{
+    font-weight:900;
+    font-size:16px;
+    line-height:1.3;
+    word-break:break-word;
+  }
+  .tripPanelToggleBtn{
+    width:auto;
+    min-height:44px;
+    padding:10px 12px;
+    border-radius:999px;
+    font-size:14px;
+  }
+  .tripPanelBody{display:none; margin-top:12px;}
+  .tripPanel.open .tripPanelBody{display:block;}
+
+  /* スマホではメインが最初に来るようにして、パネルは下に置く */
+  @media(max-width:900px){
+    .wrap{display:flex;flex-direction:column}
+    aside{order:2}
+    main{order:1}
+  }
 </style>
 </head>
 
@@ -244,30 +215,46 @@
 </header>
 
 <div class="wrap">
-  <aside class="card">
-    <h2>新規作成</h2>
-    <div class="row" style="margin-top:10px">
-      <input id="newTripName" placeholder="新しい旅行" />
-      <button class="btn" id="createTripBtn">作成</button>
+
+  <!-- ★折りたたみパネルに変更 -->
+  <aside class="card tripPanel" id="tripPanel">
+    <div class="tripPanelHeader">
+      <div class="tripPanelTitle">旅行 / メンバー</div>
+      <button class="btn secondary tripPanelToggleBtn" id="tripPanelToggleBtn" style="width:auto">開く</button>
     </div>
 
-    <hr style="border-color:#223;margin:14px 0" />
-
-    <h2>旅行選択</h2>
-    <select id="tripSelect"></select>
-    <button class="btn secondary small" id="renameTripBtn" style="margin-top:8px">旅行名を変更</button>
-
-    <hr style="border-color:#223;margin:14px 0" />
-
-    <h2>メンバー</h2>
-    <div class="row">
-      <input id="memberName" placeholder="名前" />
-      <button class="btn" id="addMemberBtn">追加</button>
+    <!-- 閉じた状態でも見える：現在の旅行名 -->
+    <div class="tripPanelCurrent">
+      <div class="muted" style="font-size:13px;font-weight:700">現在の旅行</div>
+      <div class="name" id="currentTripNameText">（未選択）</div>
     </div>
-    <div id="members" class="chips"></div>
 
-    <hr style="border-color:#223;margin:14px 0" />
-    <button class="btn danger" id="deleteTripBtn" style="margin-top:8px">この旅行を削除</button>
+    <!-- 折りたたみ本体（デフォルト非表示） -->
+    <div class="tripPanelBody" id="tripPanelBody">
+      <h2 style="margin-top:0">新規作成</h2>
+      <div class="row" style="margin-top:10px">
+        <input id="newTripName" placeholder="新しい旅行" />
+        <button class="btn" id="createTripBtn">作成</button>
+      </div>
+
+      <hr style="border-color:#223;margin:14px 0" />
+
+      <h2>旅行選択</h2>
+      <select id="tripSelect"></select>
+      <button class="btn secondary small" id="renameTripBtn" style="margin-top:8px">旅行名を変更</button>
+
+      <hr style="border-color:#223;margin:14px 0" />
+
+      <h2>メンバー</h2>
+      <div class="row">
+        <input id="memberName" placeholder="名前" />
+        <button class="btn" id="addMemberBtn">追加</button>
+      </div>
+      <div id="members" class="chips"></div>
+
+      <hr style="border-color:#223;margin:14px 0" />
+      <button class="btn danger" id="deleteTripBtn" style="margin-top:8px">この旅行を削除</button>
+    </div>
   </aside>
 
   <main>
@@ -378,9 +365,7 @@
         <div style="font-size:14px;font-weight:600;">ギャンブル結果</div>
         <div class="tableWrap">
           <table id="gambleBalanceTable">
-            <thead>
-              <tr><th>名前</th><th class="right">収支</th></tr>
-            </thead>
+            <thead><tr><th>名前</th><th class="right">収支</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -393,7 +378,7 @@
       </div>
     </section>
 
-    <!-- 支出一覧（カード表示） -->
+    <!-- 支出一覧（カード） -->
     <section class="card">
       <details open id="txDetails">
         <summary style="cursor:pointer;font-weight:700;list-style:none;">
@@ -409,7 +394,6 @@
           </select>
         </div>
 
-        <!-- フィルタ（テーブルヘッダの代替） -->
         <div class="filtersGrid">
           <div>
             <label style="margin-top:0;">種類</label>
@@ -429,7 +413,7 @@
       </details>
     </section>
 
-    <!-- ギャンブル集計一覧（カード表示） -->
+    <!-- ギャンブル集計一覧（カード） -->
     <section class="card">
       <details open id="gambleDetails">
         <summary style="cursor:pointer;font-weight:700;list-style:none;">
@@ -472,7 +456,7 @@
   </div>
 </div>
 
-<!-- ギャンブル精算ポップアップ（結果確認） -->
+<!-- ギャンブル精算ポップアップ -->
 <div id="settleModal" class="modal">
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
@@ -487,6 +471,40 @@
   </div>
 </div>
 
+<!-- 支出内訳モーダル -->
+<div id="txBreakdownModal" class="modal">
+  <div class="panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <div style="font-size:16px; font-weight:700;">内訳</div>
+      <button class="btn secondary small" id="txBreakdownCloseBtn" style="width:auto;min-height:40px">閉じる</button>
+    </div>
+
+    <div id="txBreakdownHeader" class="muted" style="margin-top:10px;font-size:14px;"></div>
+
+    <div class="kv">
+      <div>
+        <div style="font-weight:700;margin:8px 0 6px 0;">支払者：個別支払額</div>
+        <table class="miniTable">
+          <thead><tr><th>名前</th><th class="right">円</th></tr></thead>
+          <tbody id="txPayBreakdownBody"></tbody>
+        </table>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:8px 0 6px 0;">恩恵者：個別恩恵額</div>
+        <table class="miniTable">
+          <thead><tr><th>名前</th><th class="right">円</th></tr></thead>
+          <tbody id="txBenBreakdownBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="muted small" style="margin-top:10px;">
+      ※「個別」が未指定の人は、残額を均等割りした結果です。
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
@@ -495,7 +513,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDgHVdhx0RwTv6PkzBBNgYY8Ouis7yRGwlY".replace("Y8Ouis","Ouis"), // ← 既存キー対策（念のため）
+  apiKey: "AIzaSyDgHVdhx0RwTv6PkzBBNgY8Ouis7yRGwlY",
   authDomain: "trip-app-eb508.firebaseapp.com",
   projectId: "trip-app-eb508",
   storageBucket: "trip-app-eb508.firebasestorage.app",
@@ -512,6 +530,9 @@ const TX_TYPES = ["交通費","宿代","食費","物代","交際費"];
 const DEFAULT_TX_TYPE = "食費";
 const LS_LAST_TRIP_KEY = "tripApp:lastTripId";
 
+// ★追加：折りたたみ状態を保存
+const LS_PANEL_KEY = "tripApp:panelOpen";
+
 const byId=id=>document.getElementById(id);
 const yen=n=>Math.round(n||0).toLocaleString();
 const escapeHtml=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
@@ -525,6 +546,10 @@ function openModal(el){ el.style.display="block"; }
 function closeModal(el){ el.style.display="none"; }
 
 // DOM
+const tripPanel = byId("tripPanel");
+const tripPanelToggleBtn = byId("tripPanelToggleBtn");
+const currentTripNameText = byId("currentTripNameText");
+
 const newTripName=byId("newTripName");
 const createTripBtn=byId("createTripBtn");
 const tripSelect = byId("tripSelect");
@@ -569,7 +594,6 @@ const gambleBalanceBody=document.querySelector("#gambleBalanceTable tbody");
 const totalNetChips=byId("totalNetChips");
 const econTotalLine = byId("econTotalLine");
 
-// ★カード一覧コンテナ（新）
 const txCards = byId("txCards");
 const gambleCards = byId("gambleCards");
 
@@ -590,6 +614,15 @@ const txFilterType = byId("txFilterType");
 const txFilterPayer = byId("txFilterPayer");
 const txFilterBen = byId("txFilterBen");
 
+const txBreakdownModal = byId("txBreakdownModal");
+const txBreakdownCloseBtn = byId("txBreakdownCloseBtn");
+const txBreakdownHeader = byId("txBreakdownHeader");
+const txPayBreakdownBody = byId("txPayBreakdownBody");
+const txBenBreakdownBody = byId("txBenBreakdownBody");
+
+txBreakdownCloseBtn?.addEventListener("click", ()=> closeModal(txBreakdownModal));
+txBreakdownModal?.addEventListener("click", (e)=>{ if(e.target===txBreakdownModal) closeModal(txBreakdownModal); });
+
 // Firestore 状態
 let tripsUnsub=null, currentTripUnsub=null;
 let tripsIndex=[], currentTripId=null, currentTripData=null;
@@ -604,8 +637,26 @@ let remoteLastTripId = null;
 let txSortKey = "createdDesc";
 let txFilters = { type:"", payer:"", ben:"" };
 
-init();
+// ===== ★追加：パネル折りたたみ初期化（デフォルト閉じる） =====
+initPanel();
+function initPanel(){
+  const saved = localStorage.getItem(LS_PANEL_KEY);
+  const open = (saved === "1") ? true : false; // デフォルトfalse
+  setPanelOpen(open, false);
 
+  tripPanelToggleBtn?.addEventListener("click", ()=>{
+    const isOpen = tripPanel.classList.contains("open");
+    setPanelOpen(!isOpen, true);
+  });
+}
+function setPanelOpen(open, persist){
+  tripPanel.classList.toggle("open", open);
+  tripPanelToggleBtn.textContent = open ? "閉じる" : "開く";
+  if(persist) localStorage.setItem(LS_PANEL_KEY, open ? "1" : "0");
+}
+
+// ===== 初期化 =====
+init();
 function init(){
   subscribeLastTripState();
   subscribeTrips();
@@ -642,6 +693,16 @@ function setTab(kind){
   tabGamble.classList.toggle("active", !isExpense);
 }
 
+// ===== 現在の旅行名表示（常に更新） =====
+function updateCurrentTripNameUI(){
+  const name = currentTripData?.name
+    || tripsIndex.find(t=>t.id===currentTripId)?.name
+    || (tripSelect?.selectedOptions?.[0]?.textContent ?? "")
+    || "（未選択）";
+  if(currentTripNameText) currentTripNameText.textContent = name || "（未選択）";
+}
+
+// ===== 最後に開いた旅行ID（Firestore）を購読 =====
 function subscribeLastTripState(){
   if(lastTripUnsub) lastTripUnsub();
   const ref = doc(db, "appState", "lastTrip");
@@ -651,6 +712,7 @@ function subscribeLastTripState(){
   });
 }
 
+// ===== 旅行一覧購読 =====
 tripSelect?.addEventListener("change", ()=>{ if(tripSelect.value) selectTrip(tripSelect.value); });
 
 function subscribeTrips(){
@@ -682,11 +744,17 @@ function renderTripSelect(){
 
   if(!target){
     clearMainViews();
+    updateCurrentTripNameUI();
     return;
   }
 
   tripSelect.value = target;
-  if(currentTripId !== target) selectTrip(target);
+
+  if(currentTripId !== target){
+    selectTrip(target);
+  }else{
+    updateCurrentTripNameUI();
+  }
 }
 
 async function selectTrip(id){
@@ -715,12 +783,15 @@ function subscribeCurrentTrip(id){
   if(currentTripUnsub) currentTripUnsub();
   const ref=doc(db,"trips",id);
   currentTripUnsub=onSnapshot(ref, async d=>{
-    if(!d.exists()){ currentTripData=null; clearMainViews(); return; }
+    if(!d.exists()){ currentTripData=null; clearMainViews(); updateCurrentTripNameUI(); return; }
     currentTripData=d.data();
 
     if(!currentTripData.tx) currentTripData.tx = [];
     if(!currentTripData.gamble) currentTripData.gamble = [];
     if(!currentTripData.gambleBalance) currentTripData.gambleBalance = {};
+
+    // ★旅行名を表示（閉じてても更新）
+    updateCurrentTripNameUI();
 
     const members = currentTripData.members || [];
     const correctBal = recomputeGambleBalance(currentTripData.gamble || [], members);
@@ -892,12 +963,81 @@ function sortTxList(list, key){
   return withIdx.sort(cmp).map(x=>x.t);
 }
 
-/* =========================
-   ★支出一覧：カード表示
-   - 説明タップのポップアップなし
-   - 支払者/恩恵者は折り返して全員表示
-   - 編集/削除ボタンは横並び＆大きめ
-   ========================= */
+function computeTxBreakdown(t){
+  const members = currentTripData?.members || [];
+  const amount = Number(t.amount)||0;
+
+  const payers = (t.payers && t.payers.length) ? t.payers.filter(p=>members.includes(p))
+                : (t.payer ? [t.payer].filter(p=>members.includes(p)) : []);
+  const payerAmounts = t.payerAmounts || {};
+
+  const benList = (t.ben || []).filter(b => members.includes(b) || b === ECON);
+  const benAmounts = t.benAmounts || {};
+
+  const payerOut = {};
+  let sumFixedPay = 0;
+  const fixedPaySet = new Set();
+  payers.forEach(p=>{
+    const v = Number(payerAmounts?.[p]||0);
+    if(v>0){
+      payerOut[p]=Math.round(v);
+      sumFixedPay += v;
+      fixedPaySet.add(p);
+    }
+  });
+  const remainPay = amount - sumFixedPay;
+  const flexPayers = payers.filter(p=>!fixedPaySet.has(p));
+  const sharePay = flexPayers.length ? (remainPay / flexPayers.length) : 0;
+  flexPayers.forEach(p=>{ payerOut[p]=Math.round(sharePay); });
+
+  const benOut = {};
+  let sumFixedBen = 0;
+  const fixedBenSet = new Set();
+  benList.forEach(b=>{
+    const v = Number(benAmounts?.[b]||0);
+    if(v>0){
+      benOut[b]=Math.round(v);
+      sumFixedBen += v;
+      fixedBenSet.add(b);
+    }
+  });
+  const remainBen = amount - sumFixedBen;
+  const flexBen = benList.filter(b=>!fixedBenSet.has(b));
+  const shareBen = flexBen.length ? (remainBen / flexBen.length) : 0;
+  flexBen.forEach(b=>{ benOut[b]=Math.round(shareBen); });
+
+  return { payerOut, benOut, payers, benList, amount };
+}
+
+function openTxBreakdownModal(txId){
+  const t = (currentTripData?.tx || []).find(x=>x.id===txId);
+  if(!t) return;
+
+  const { payerOut, benOut, payers, benList, amount } = computeTxBreakdown(t);
+  const type = t.type || "（未設定）";
+  const desc = t.desc || "（説明なし）";
+
+  txBreakdownHeader.innerHTML =
+    `<div><b>${escapeHtml(type)}</b> / ${escapeHtml(desc)}</div>
+     <div style="margin-top:6px;">金額：<b style="font-size:16px;">${yen(amount)}円</b></div>`;
+
+  txPayBreakdownBody.innerHTML="";
+  payers.forEach(p=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td>${escapeHtml(p)}</td><td class="right">${yen(payerOut[p]||0)}</td>`;
+    txPayBreakdownBody.appendChild(tr);
+  });
+
+  txBenBreakdownBody.innerHTML="";
+  benList.forEach(b=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td>${escapeHtml(b)}</td><td class="right">${yen(benOut[b]||0)}</td>`;
+    txBenBreakdownBody.appendChild(tr);
+  });
+
+  openModal(txBreakdownModal);
+}
+
 function renderTx(){
   const txRaw = [...(currentTripData.tx||[])];
   const filtered = applyTxFilters(txRaw);
@@ -919,7 +1059,11 @@ function renderTx(){
       <div class="itemTop">
         <div class="itemTitle">
           <span class="pill">${escapeHtml(type)}</span>
-          ${desc ? `<span class="wrapText">${escapeHtml(desc)}</span>` : `<span class="muted">（説明なし）</span>`}
+          ${
+            desc
+              ? `<span class="wrapText descTap" data-txdetail="${escapeHtml(t.id)}">${escapeHtml(desc)}</span>`
+              : `<span class="muted descTap" data-txdetail="${escapeHtml(t.id)}">（説明なし）</span>`
+          }
         </div>
         <div class="itemAmount">${yen(amount)}円</div>
       </div>
@@ -941,14 +1085,17 @@ function renderTx(){
   });
 
   txCards.onclick=(e)=>{
+    const detail = e.target.closest("[data-txdetail]");
+    if(detail){ openTxBreakdownModal(detail.dataset.txdetail); return; }
+
     const delBtn=e.target.closest("button[data-del]");
     if(delBtn) deleteTx(delBtn.dataset.del);
+
     const editBtn=e.target.closest("button[data-edit]");
     if(editBtn) startEditTx(editBtn.dataset.edit);
   };
 }
 
-// 結果計算（支出）
 function computeExpenseStats(){
   const members=currentTripData.members||[];
   const tx=currentTripData.tx||[];
@@ -1067,9 +1214,7 @@ function renderTotalNet(){
   });
 }
 
-/* =========================
-   ギャンブル入力（そのまま）
-   ========================= */
+// ===== ギャンブルUI =====
 function renderGambleForm(){
   const members=currentTripData?.members||[];
   if(!gList) return;
@@ -1338,10 +1483,6 @@ function renderGambleBalance(){
   });
 }
 
-/* =========================
-   ★ギャンブル一覧：カード表示
-   - 編集/削除を横並び＆大きめ
-   ========================= */
 function renderGambleListCards(){
   const list = [...(currentTripData.gamble||[])].reverse();
   gambleCards.innerHTML="";
@@ -1355,13 +1496,11 @@ function renderGambleListCards(){
     card.innerHTML = `
       <div class="itemTop">
         <div class="itemTitle">
-          <span class="pill">ギャンブル</span>
           <span class="wrapText">${escapeHtml(g.desc||"（無題）")}</span>
         </div>
       </div>
 
-      <div class="itemMeta">
-        <div class="k">支払い</div>
+      <div class="itemMeta" style="grid-template-columns: 1fr;">
         <div class="wrapText">${escapeHtml(payText)}</div>
       </div>
 
@@ -1498,6 +1637,7 @@ deleteTripBtn.addEventListener("click", async ()=>{
   await deleteDoc(doc(db,"trips",currentTripId));
   currentTripId=null; currentTripData=null;
   clearMainViews();
+  updateCurrentTripNameUI();
 });
 
 addTxBtn.addEventListener("click", async ()=>{
@@ -1571,13 +1711,7 @@ addTxBtn.addEventListener("click", async ()=>{
   }
 });
 
-clearFormBtn.addEventListener("click", ()=>{
-  if(editingTxId){
-    clearForm();
-    return;
-  }
-  clearForm();
-});
+clearFormBtn.addEventListener("click", ()=>{ clearForm(); });
 
 async function deleteTx(id){
   if(!currentTripData || !currentTripId) return;
