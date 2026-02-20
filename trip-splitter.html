@@ -206,6 +206,38 @@
     aside{order:1}
     main{order:2}
   }
+
+  /* =========================
+     ★追加：総収支 詳細モーダル（横スライド）
+     ========================= */
+  .mdTitle{font-size:16px;font-weight:800}
+  .mdSub{font-size:13px;opacity:.85;margin-top:6px}
+  .slider{
+    display:flex;
+    gap:12px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    padding:10px 2px 6px 2px;
+    margin-top:10px;
+  }
+  .slide{
+    min-width:100%;
+    scroll-snap-align:start;
+    border:1px solid #223;
+    border-radius:14px;
+    background:#0f1530;
+    padding:12px;
+  }
+  .slide h3{margin:0 0 10px 0;font-size:15px}
+  .pieWrap{display:grid;grid-template-columns: 1fr; gap:10px;}
+  canvas{max-width:100%; width:100%; height:auto; background:transparent}
+  .legend{display:flex;flex-direction:column;gap:6px;font-size:14px}
+  .legendRow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #223;padding-bottom:6px}
+  .legendRow:last-child{border-bottom:none;padding-bottom:0}
+  .dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
+  .dot{width:8px;height:8px;border-radius:999px;background:#2a376a;opacity:.6}
+  .dot.active{opacity:1}
 </style>
 </head>
 
@@ -505,6 +537,60 @@
   </div>
 </div>
 
+<!-- ★追加：総収支→メンバー詳細（横スライド円グラフ） -->
+<div id="memberDetailModal" class="modal">
+  <div class="panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <div>
+        <div class="mdTitle" id="mdMemberTitle">詳細</div>
+        <div class="mdSub">横にスワイプして切り替え</div>
+      </div>
+      <button class="btn secondary small" id="mdCloseBtn" style="width:auto;min-height:40px">閉じる</button>
+    </div>
+
+    <div class="slider" id="mdSlider">
+      <div class="slide">
+        <h3>総支出：種類別（ギャンブル含む）</h3>
+        <div class="pieWrap">
+          <canvas id="pieExpenseType" width="520" height="360"></canvas>
+          <div class="legend" id="legendExpenseType"></div>
+        </div>
+      </div>
+
+      <div class="slide">
+        <h3>総収入：種類別（ギャンブル含む）</h3>
+        <div class="pieWrap">
+          <canvas id="pieIncomeType" width="520" height="360"></canvas>
+          <div class="legend" id="legendIncomeType"></div>
+        </div>
+      </div>
+
+      <div class="slide">
+        <h3>総支出：恩恵者ごと（ギャンブル除く）</h3>
+        <div class="pieWrap">
+          <canvas id="pieExpenseByBen" width="520" height="360"></canvas>
+          <div class="legend" id="legendExpenseByBen"></div>
+        </div>
+      </div>
+
+      <div class="slide">
+        <h3>総収入：支払者ごと（ギャンブル除く）</h3>
+        <div class="pieWrap">
+          <canvas id="pieIncomeByPayer" width="520" height="360"></canvas>
+          <div class="legend" id="legendIncomeByPayer"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dots" id="mdDots">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
@@ -620,6 +706,23 @@ const txBreakdownHeader = byId("txBreakdownHeader");
 const txPayBreakdownBody = byId("txPayBreakdownBody");
 const txBenBreakdownBody = byId("txBenBreakdownBody");
 
+/* ★追加：メンバー詳細モーダルDOM */
+const memberDetailModal = byId("memberDetailModal");
+const mdCloseBtn = byId("mdCloseBtn");
+const mdMemberTitle = byId("mdMemberTitle");
+const mdSlider = byId("mdSlider");
+const mdDots = byId("mdDots");
+
+const pieExpenseType = byId("pieExpenseType");
+const pieIncomeType = byId("pieIncomeType");
+const pieExpenseByBen = byId("pieExpenseByBen");
+const pieIncomeByPayer = byId("pieIncomeByPayer");
+
+const legendExpenseType = byId("legendExpenseType");
+const legendIncomeType = byId("legendIncomeType");
+const legendExpenseByBen = byId("legendExpenseByBen");
+const legendIncomeByPayer = byId("legendIncomeByPayer");
+
 txBreakdownCloseBtn?.addEventListener("click", ()=> closeModal(txBreakdownModal));
 txBreakdownModal?.addEventListener("click", (e)=>{ if(e.target===txBreakdownModal) closeModal(txBreakdownModal); });
 
@@ -679,6 +782,15 @@ function init(){
     txFilters.ben = txFilterBen.value || "";
     renderTx();
   });
+
+  // ★追加：メンバー詳細モーダル close
+  mdCloseBtn?.addEventListener("click", ()=> closeModal(memberDetailModal));
+  memberDetailModal?.addEventListener("click", (e)=>{ if(e.target===memberDetailModal) closeModal(memberDetailModal); });
+
+  // ★追加：スライダーのドット更新
+  mdSlider?.addEventListener("scroll", ()=>{
+    updateDotsByScroll();
+  }, { passive:true });
 }
 
 function bindTabs(){
@@ -1195,6 +1307,7 @@ function renderTotalNet(){
     const t = Math.round(e + g);
 
     const div=document.createElement("div");
+    div.dataset.member = m; /* ★追加：クリックで詳細 */
     div.style.display="flex";
     div.style.alignItems="center";
     div.style.justifyContent="space-between";
@@ -1204,6 +1317,7 @@ function renderTotalNet(){
     div.style.borderRadius="999px";
     div.style.background="#121833";
     div.style.fontWeight="800";
+    div.style.cursor="pointer";
     div.innerHTML = `
       <span>${escapeHtml(m)}</span>
       <span class="pill ${t>=0?"plus":"minus"}" style="font-size:14px;padding:5px 12px;">
@@ -1212,6 +1326,14 @@ function renderTotalNet(){
     `;
     totalNetChips.appendChild(div);
   });
+
+  // ★追加：総収支のメンバー行を押したら詳細
+  totalNetChips.onclick = (e)=>{
+    const row = e.target.closest("[data-member]");
+    if(!row) return;
+    const m = row.dataset.member;
+    openMemberDetailModal(m);
+  };
 }
 
 // ===== ギャンブルUI =====
@@ -1890,6 +2012,195 @@ selectAllBenBtn?.addEventListener("click", ()=>{
     if(!cb.checked) cb.dataset.amount = "";
   });
 });
+
+/* =========================================================
+   ★追加：総収支 詳細の集計＆円グラフ描画（他機能は変更なし）
+   ========================================================= */
+
+function addToMap(map, key, value){
+  if(!key) key = "（未設定）";
+  map[key] = (Number(map[key]||0) + Number(value||0));
+}
+function mapToSortedPairs(map){
+  return Object.entries(map||{})
+    .map(([k,v])=>[k, Math.round(Number(v||0))])
+    .filter(([,v])=>v>0)
+    .sort((a,b)=>b[1]-a[1]);
+}
+
+function drawPie(canvas, legendEl, pairs){
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+
+  ctx.clearRect(0,0,W,H);
+
+  legendEl.innerHTML = "";
+
+  if(!pairs.length){
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.font = "16px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("データなし", W/2, H/2);
+    ctx.restore();
+    return;
+  }
+
+  const total = pairs.reduce((a, [,v])=>a+v, 0);
+  const cx = W*0.36, cy = H*0.52;
+  const r  = Math.min(W,H)*0.32;
+
+  // 色：HSLで自動生成（固定色指定しない）
+  const colorOf = (i, n)=>{
+    const hue = (i * (360 / Math.max(1,n))) % 360;
+    return `hsl(${hue} 70% 55%)`;
+  };
+
+  let start = -Math.PI/2;
+  pairs.forEach(([label, value], i)=>{
+    const frac = value / total;
+    const end = start + frac * Math.PI * 2;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = colorOf(i, pairs.length);
+    ctx.fill();
+
+    // 外周ライン
+    ctx.strokeStyle = "rgba(0,0,0,.25)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    start = end;
+
+    // legend
+    const row = document.createElement("div");
+    row.className = "legendRow";
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <span style="width:10px;height:10px;border-radius:999px;background:${colorOf(i, pairs.length)};display:inline-block;flex:0 0 auto"></span>
+        <span class="wrapText" style="min-width:0">${escapeHtml(label)}</span>
+      </div>
+      <div style="font-weight:800;white-space:nowrap">${yen(value)}円</div>
+    `;
+    legendEl.appendChild(row);
+  });
+
+  // 中央テキスト
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,.92)";
+  ctx.font = "800 18px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(`${yen(total)}円`, cx, cy+6);
+  ctx.restore();
+}
+
+function computeMemberDetails(member){
+  const members = currentTripData?.members || [];
+  const txList = currentTripData?.tx || [];
+  const gList = currentTripData?.gamble || [];
+
+  const expenseByType = {};
+  const incomeByType  = {};
+  const expenseByBen  = {};   // ギャンブル除く：そのメンバーが支払った分の恩恵者内訳
+  const incomeByPayer = {};   // ギャンブル除く：そのメンバーが受けた恩恵の支払者内訳
+
+  // 支出（使用側）/ 収入（支払側）を取る（種類別）
+  for(const t of txList){
+    const type = t.type || "（未設定）";
+    const { payerOut, benOut } = computeTxBreakdown(t);
+
+    // そのメンバーの「使用額」＝ benOut[member]
+    if(Number(benOut?.[member]||0) > 0){
+      addToMap(expenseByType, type, benOut[member]);
+    }
+    // そのメンバーの「支払額」＝ payerOut[member]
+    if(Number(payerOut?.[member]||0) > 0){
+      addToMap(incomeByType, type, payerOut[member]);
+    }
+
+    // ③ ギャンブル除く：総支出の恩恵者ごと（＝そのメンバーが払った分を、恩恵者へ配分）
+    if(Number(payerOut?.[member]||0) > 0){
+      const paidByMember = Number(payerOut[member]||0);
+
+      // 恩恵者（自分含む、経済は除く）
+      const benPairs = Object.entries(benOut||{})
+        .filter(([b,v])=> members.includes(b) && Number(v||0)>0);
+
+      const denom = benPairs.reduce((a,[,v])=>a+Number(v||0),0);
+      if(denom > 0){
+        benPairs.forEach(([b,v])=>{
+          addToMap(expenseByBen, b, paidByMember * (Number(v||0)/denom));
+        });
+      }
+    }
+
+    // ④ ギャンブル除く：総収入の支払者ごと（＝そのメンバーが受けた恩恵を、支払者へ配分）
+    if(Number(benOut?.[member]||0) > 0){
+      const gotByMember = Number(benOut[member]||0);
+
+      const payerPairs = Object.entries(payerOut||{})
+        .filter(([p,v])=> members.includes(p) && Number(v||0)>0);
+
+      const denom = payerPairs.reduce((a,[,v])=>a+Number(v||0),0);
+      if(denom > 0){
+        payerPairs.forEach(([p,v])=>{
+          addToMap(incomeByPayer, p, gotByMember * (Number(v||0)/denom));
+        });
+      }
+    }
+  }
+
+  // ギャンブル：種類「ギャンブル」として、勝ち=収入、負け=支出
+  let gSum = 0;
+  for(const g of gList){
+    const v = Number(g?.entries?.[member] || 0);
+    if(!v) continue;
+    gSum += v;
+  }
+  if(gSum < 0) addToMap(expenseByType, "ギャンブル", Math.abs(gSum));
+  if(gSum > 0) addToMap(incomeByType,  "ギャンブル", gSum);
+
+  return {
+    expenseTypePairs: mapToSortedPairs(expenseByType),
+    incomeTypePairs:  mapToSortedPairs(incomeByType),
+    expenseByBenPairs: mapToSortedPairs(expenseByBen),
+    incomeByPayerPairs: mapToSortedPairs(incomeByPayer),
+  };
+}
+
+function openMemberDetailModal(member){
+  if(!currentTripData) return;
+
+  mdMemberTitle.textContent = `${member} の詳細`;
+
+  // スライダー先頭に戻す
+  mdSlider.scrollLeft = 0;
+  setActiveDot(0);
+
+  const d = computeMemberDetails(member);
+
+  drawPie(pieExpenseType, legendExpenseType, d.expenseTypePairs);
+  drawPie(pieIncomeType,  legendIncomeType,  d.incomeTypePairs);
+  drawPie(pieExpenseByBen, legendExpenseByBen, d.expenseByBenPairs);
+  drawPie(pieIncomeByPayer, legendIncomeByPayer, d.incomeByPayerPairs);
+
+  openModal(memberDetailModal);
+}
+
+function setActiveDot(idx){
+  if(!mdDots) return;
+  const dots = [...mdDots.querySelectorAll(".dot")];
+  dots.forEach((d,i)=> d.classList.toggle("active", i===idx));
+}
+function updateDotsByScroll(){
+  if(!mdSlider) return;
+  const w = mdSlider.clientWidth || 1;
+  const idx = Math.round(mdSlider.scrollLeft / w);
+  setActiveDot(Math.max(0, Math.min(3, idx)));
+}
 </script>
 </body>
 </html>
