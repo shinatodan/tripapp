@@ -157,8 +157,6 @@
 
   /* =========================
      ★追加：左の「旅行/メンバー」パネルを折りたたみ
-     - デフォルトは閉じる
-     - 閉じても「現在の旅行名」は見える
      ========================= */
   .tripPanel{padding:14px}
   .tripPanelHeader{
@@ -208,36 +206,71 @@
   }
 
   /* =========================
-     ★追加：総収支 詳細モーダル（横スライド）
+     ★追加：メンバー詳細（円グラフ）モーダル
      ========================= */
   .mdTitle{font-size:16px;font-weight:800}
-  .mdSub{font-size:13px;opacity:.85;margin-top:6px}
-  .slider{
-    display:flex;
-    gap:12px;
+  .carousel{
+    margin-top:12px;
     overflow-x:auto;
+    display:flex;
     scroll-snap-type:x mandatory;
+    gap:12px;
     -webkit-overflow-scrolling:touch;
-    padding:10px 2px 6px 2px;
-    margin-top:10px;
+    padding-bottom:8px;
   }
   .slide{
-    min-width:100%;
     scroll-snap-align:start;
+    flex:0 0 100%;
     border:1px solid #223;
-    border-radius:14px;
     background:#0f1530;
+    border-radius:14px;
     padding:12px;
   }
-  .slide h3{margin:0 0 10px 0;font-size:15px}
-  .pieWrap{display:grid;grid-template-columns: 1fr; gap:10px;}
-  canvas{max-width:100%; width:100%; height:auto; background:transparent}
-  .legend{display:flex;flex-direction:column;gap:6px;font-size:14px}
-  .legendRow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #223;padding-bottom:6px}
-  .legendRow:last-child{border-bottom:none;padding-bottom:0}
-  .dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
-  .dot{width:8px;height:8px;border-radius:999px;background:#2a376a;opacity:.6}
-  .dot.active{opacity:1}
+  .slide h3{margin:0 0 10px 0;font-size:14px}
+  .chartWrap{
+    display:flex;
+    justify-content:center; /* ★中央寄せ */
+    align-items:center;
+    width:100%;
+    padding:6px 0 10px 0;
+  }
+  canvas.pie{
+    display:block;
+    margin:0 auto; /* ★中央寄せ */
+    width:280px;
+    height:280px;
+    max-width:80vw;
+    max-height:80vw;
+  }
+  .legend{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:10px;
+  }
+  .lgRow{
+    display:flex; justify-content:space-between; gap:10px; align-items:center;
+    padding:8px 10px;
+    border:1px solid #223;
+    border-radius:12px;
+    background:#121833;
+    font-size:14px;
+  }
+  .lgLeft{display:flex; align-items:center; gap:10px; min-width:0}
+  .swatch{width:14px;height:14px;border-radius:4px;flex:0 0 auto}
+  .lgName{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .lgVal{font-weight:800; flex:0 0 auto}
+  .carCtrl{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-top:10px;
+  }
+  .dots{display:flex; gap:8px; justify-content:center; flex:1}
+  .dot{
+    width:10px; height:10px; border-radius:999px; border:1px solid #2a376a;
+    background:#0f1530; cursor:pointer;
+  }
+  .dot.active{background:#4a5c9a}
+  .navBtn{width:auto; min-height:40px; padding:8px 12px}
 </style>
 </head>
 
@@ -537,56 +570,44 @@
   </div>
 </div>
 
-<!-- ★追加：総収支→メンバー詳細（横スライド円グラフ） -->
+<!-- ★追加：メンバー詳細（円グラフ）モーダル -->
 <div id="memberDetailModal" class="modal">
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-      <div>
-        <div class="mdTitle" id="mdMemberTitle">詳細</div>
-        <div class="mdSub">横にスワイプして切り替え</div>
-      </div>
+      <div class="mdTitle" id="mdTitle">詳細</div>
       <button class="btn secondary small" id="mdCloseBtn" style="width:auto;min-height:40px">閉じる</button>
     </div>
 
-    <div class="slider" id="mdSlider">
+    <div class="carousel" id="mdCarousel">
       <div class="slide">
-        <h3>総支出：種類別（ギャンブル含む）</h3>
-        <div class="pieWrap">
-          <canvas id="pieExpenseType" width="520" height="360"></canvas>
-          <div class="legend" id="legendExpenseType"></div>
-        </div>
+        <h3>総支出（種類別・ギャンブル含む）</h3>
+        <div class="chartWrap"><canvas class="pie" id="pieExpType"></canvas></div>
+        <div class="legend" id="lgExpType"></div>
       </div>
 
       <div class="slide">
-        <h3>総収入：種類別（ギャンブル含む）</h3>
-        <div class="pieWrap">
-          <canvas id="pieIncomeType" width="520" height="360"></canvas>
-          <div class="legend" id="legendIncomeType"></div>
-        </div>
+        <h3>総収入（種類別・ギャンブル含む）</h3>
+        <div class="chartWrap"><canvas class="pie" id="pieIncType"></canvas></div>
+        <div class="legend" id="lgIncType"></div>
       </div>
 
       <div class="slide">
-        <h3>総支出：恩恵者ごと（ギャンブル除く）</h3>
-        <div class="pieWrap">
-          <canvas id="pieExpenseByBen" width="520" height="360"></canvas>
-          <div class="legend" id="legendExpenseByBen"></div>
-        </div>
+        <h3>総支出（恩恵者ごと・ギャンブル除く）</h3>
+        <div class="chartWrap"><canvas class="pie" id="pieExpBen"></canvas></div>
+        <div class="legend" id="lgExpBen"></div>
       </div>
 
       <div class="slide">
-        <h3>総収入：支払者ごと（ギャンブル除く）</h3>
-        <div class="pieWrap">
-          <canvas id="pieIncomeByPayer" width="520" height="360"></canvas>
-          <div class="legend" id="legendIncomeByPayer"></div>
-        </div>
+        <h3>総収入（支払者ごと・ギャンブル除く）</h3>
+        <div class="chartWrap"><canvas class="pie" id="pieIncPayer"></canvas></div>
+        <div class="legend" id="lgIncPayer"></div>
       </div>
     </div>
 
-    <div class="dots" id="mdDots">
-      <div class="dot active"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
+    <div class="carCtrl">
+      <button class="btn secondary navBtn" id="mdPrevBtn">←</button>
+      <div class="dots" id="mdDots"></div>
+      <button class="btn secondary navBtn" id="mdNextBtn">→</button>
     </div>
   </div>
 </div>
@@ -621,7 +642,7 @@ const LS_PANEL_KEY = "tripApp:panelOpen";
 
 const byId=id=>document.getElementById(id);
 const yen=n=>Math.round(n||0).toLocaleString();
-const escapeHtml=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+const escapeHtml=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;"," >":"&gt;","\"":"&quot;","'":"&#039;"}[m]||({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m])));
 const uuid=()=>crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random().toString(16).slice(2));
 function toInt(v){
   if(v==null) return 0;
@@ -706,25 +727,30 @@ const txBreakdownHeader = byId("txBreakdownHeader");
 const txPayBreakdownBody = byId("txPayBreakdownBody");
 const txBenBreakdownBody = byId("txBenBreakdownBody");
 
-/* ★追加：メンバー詳細モーダルDOM */
-const memberDetailModal = byId("memberDetailModal");
-const mdCloseBtn = byId("mdCloseBtn");
-const mdMemberTitle = byId("mdMemberTitle");
-const mdSlider = byId("mdSlider");
-const mdDots = byId("mdDots");
-
-const pieExpenseType = byId("pieExpenseType");
-const pieIncomeType = byId("pieIncomeType");
-const pieExpenseByBen = byId("pieExpenseByBen");
-const pieIncomeByPayer = byId("pieIncomeByPayer");
-
-const legendExpenseType = byId("legendExpenseType");
-const legendIncomeType = byId("legendIncomeType");
-const legendExpenseByBen = byId("legendExpenseByBen");
-const legendIncomeByPayer = byId("legendIncomeByPayer");
-
 txBreakdownCloseBtn?.addEventListener("click", ()=> closeModal(txBreakdownModal));
 txBreakdownModal?.addEventListener("click", (e)=>{ if(e.target===txBreakdownModal) closeModal(txBreakdownModal); });
+
+// ★追加：メンバー詳細モーダルDOM
+const memberDetailModal = byId("memberDetailModal");
+const mdTitle = byId("mdTitle");
+const mdCloseBtn = byId("mdCloseBtn");
+const mdCarousel = byId("mdCarousel");
+const mdPrevBtn = byId("mdPrevBtn");
+const mdNextBtn = byId("mdNextBtn");
+const mdDots = byId("mdDots");
+
+const pieExpType = byId("pieExpType");
+const pieIncType = byId("pieIncType");
+const pieExpBen  = byId("pieExpBen");
+const pieIncPayer= byId("pieIncPayer");
+
+const lgExpType = byId("lgExpType");
+const lgIncType = byId("lgIncType");
+const lgExpBen  = byId("lgExpBen");
+const lgIncPayer= byId("lgIncPayer");
+
+mdCloseBtn?.addEventListener("click", ()=> closeModal(memberDetailModal));
+memberDetailModal?.addEventListener("click", (e)=>{ if(e.target===memberDetailModal) closeModal(memberDetailModal); });
 
 // Firestore 状態
 let tripsUnsub=null, currentTripUnsub=null;
@@ -783,14 +809,8 @@ function init(){
     renderTx();
   });
 
-  // ★追加：メンバー詳細モーダル close
-  mdCloseBtn?.addEventListener("click", ()=> closeModal(memberDetailModal));
-  memberDetailModal?.addEventListener("click", (e)=>{ if(e.target===memberDetailModal) closeModal(memberDetailModal); });
-
-  // ★追加：スライダーのドット更新
-  mdSlider?.addEventListener("scroll", ()=>{
-    updateDotsByScroll();
-  }, { passive:true });
+  // ★追加：詳細モーダルのスライド操作
+  initMemberDetailCarousel();
 }
 
 function bindTabs(){
@@ -1307,7 +1327,8 @@ function renderTotalNet(){
     const t = Math.round(e + g);
 
     const div=document.createElement("div");
-    div.dataset.member = m; /* ★追加：クリックで詳細 */
+    div.dataset.member = m;               // ★追加：クリック対象
+    div.style.cursor = "pointer";         // ★追加：押せる感
     div.style.display="flex";
     div.style.alignItems="center";
     div.style.justifyContent="space-between";
@@ -1317,7 +1338,6 @@ function renderTotalNet(){
     div.style.borderRadius="999px";
     div.style.background="#121833";
     div.style.fontWeight="800";
-    div.style.cursor="pointer";
     div.innerHTML = `
       <span>${escapeHtml(m)}</span>
       <span class="pill ${t>=0?"plus":"minus"}" style="font-size:14px;padding:5px 12px;">
@@ -1327,12 +1347,13 @@ function renderTotalNet(){
     totalNetChips.appendChild(div);
   });
 
-  // ★追加：総収支のメンバー行を押したら詳細
+  // ★追加：クリックで詳細モーダル
   totalNetChips.onclick = (e)=>{
     const row = e.target.closest("[data-member]");
     if(!row) return;
-    const m = row.dataset.member;
-    openMemberDetailModal(m);
+    const name = row.dataset.member;
+    if(!name) return;
+    openMemberDetail(name);
   };
 }
 
@@ -2014,193 +2035,320 @@ selectAllBenBtn?.addEventListener("click", ()=>{
 });
 
 /* =========================================================
-   ★追加：総収支 詳細の集計＆円グラフ描画（他機能は変更なし）
+   ★追加：メンバー詳細（円グラフ）ロジック
+   - 総支出/総収入：種類別（ギャンブルは「ギャンブル」別枠）
+   - ギャンブル除外：支出は恩恵者別、収入は支払者別
+   - 円グラフは中央寄せ、横スライド
    ========================================================= */
+function initMemberDetailCarousel(){
+  if(!mdCarousel || !mdDots) return;
 
-function addToMap(map, key, value){
-  if(!key) key = "（未設定）";
-  map[key] = (Number(map[key]||0) + Number(value||0));
+  mdDots.innerHTML = "";
+  const slides = Array.from(mdCarousel.querySelectorAll(".slide"));
+  slides.forEach((_, i)=>{
+    const d = document.createElement("button");
+    d.type="button";
+    d.className="dot";
+    d.dataset.idx=String(i);
+    d.addEventListener("click", ()=> scrollToSlide(i));
+    mdDots.appendChild(d);
+  });
+
+  mdPrevBtn?.addEventListener("click", ()=>{
+    const i = getCurrentSlideIndex();
+    scrollToSlide(Math.max(0, i-1));
+  });
+  mdNextBtn?.addEventListener("click", ()=>{
+    const i = getCurrentSlideIndex();
+    scrollToSlide(Math.min(slides.length-1, i+1));
+  });
+
+  mdCarousel.addEventListener("scroll", ()=>{
+    updateDots();
+  }, { passive:true });
+
+  function scrollToSlide(i){
+    const s = slides[i];
+    if(!s) return;
+    mdCarousel.scrollTo({ left: s.offsetLeft, behavior:"smooth" });
+  }
+
+  function getCurrentSlideIndex(){
+    const left = mdCarousel.scrollLeft;
+    let best = 0;
+    let bestDist = Infinity;
+    slides.forEach((s,i)=>{
+      const d = Math.abs(s.offsetLeft - left);
+      if(d < bestDist){ bestDist=d; best=i; }
+    });
+    return best;
+  }
+
+  function updateDots(){
+    const i = getCurrentSlideIndex();
+    Array.from(mdDots.children).forEach((el, idx)=>{
+      el.classList.toggle("active", idx===i);
+    });
+  }
+
+  // 初期
+  requestAnimationFrame(updateDots);
 }
-function mapToSortedPairs(map){
-  return Object.entries(map||{})
+
+function openMemberDetail(member){
+  if(!currentTripData) return;
+  const members = currentTripData.members || [];
+  if(!members.includes(member)) return;
+
+  mdTitle.textContent = `詳細：${member}`;
+  // 先頭に戻す
+  mdCarousel.scrollTo({ left: 0, behavior:"instant" });
+
+  // データ作成
+  const data = buildMemberDetailData(member);
+
+  // 描画
+  renderPieBlock(pieExpType, lgExpType, data.expenseByType);
+  renderPieBlock(pieIncType, lgIncType, data.incomeByType);
+  renderPieBlock(pieExpBen,  lgExpBen,  data.expenseByBeneficiary);
+  renderPieBlock(pieIncPayer,lgIncPayer,data.incomeByPayer);
+
+  // dot更新
+  requestAnimationFrame(()=>{
+    Array.from(mdDots.children).forEach((el, idx)=> el.classList.toggle("active", idx===0));
+  });
+
+  openModal(memberDetailModal);
+}
+
+function buildMemberDetailData(member){
+  const members = currentTripData?.members || [];
+  const tx = currentTripData?.tx || [];
+  const gamble = currentTripData?.gamble || [];
+
+  const expenseByType = {};
+  const incomeByType = {};
+
+  // ギャンブルは種類に「ギャンブル」で加算（支出/収入）
+  let gExp = 0;
+  let gInc = 0;
+  for(const g of gamble){
+    const v = Number(g?.entries?.[member] || 0);
+    if(v < 0) gExp += (-v);
+    if(v > 0) gInc += v;
+  }
+  if(gExp > 0) expenseByType["ギャンブル"] = Math.round(gExp);
+  if(gInc > 0) incomeByType["ギャンブル"] = Math.round(gInc);
+
+  // 非ギャンブル：種類別は「自分の支払い」と「自分の恩恵」の差分で支出/収入に分解
+  //  - 支出（その種類に対して自分が得た分が多い） = max(0, benOut[me] - payerOut[me])
+  //  - 収入（その種類で自分が立て替えた分が多い） = max(0, payerOut[me] - benOut[me])
+  for(const t of tx){
+    const type = String(t?.type || "（未設定）");
+    const { payerOut, benOut } = computeTxBreakdown(t);
+    const paidMe = Number(payerOut?.[member] || 0);
+    const benMe  = Number(benOut?.[member]  || 0);
+
+    const exp = Math.max(0, benMe - paidMe);
+    const inc = Math.max(0, paidMe - benMe);
+
+    if(exp > 0) expenseByType[type] = Math.round((expenseByType[type]||0) + exp);
+    if(inc > 0) incomeByType[type]  = Math.round((incomeByType[type]||0)  + inc);
+  }
+
+  // ギャンブル除く：総支出の恩恵者ごと（=自分が支払った分が誰の恩恵か）
+  const expenseByBeneficiary = {};
+  // ギャンブル除く：総収入の支払者ごと（=自分が恩恵を受けた分が誰の支払いか）
+  const incomeByPayer = {};
+
+  for(const t of tx){
+    const { payerOut, benOut, amount } = computeTxBreakdown(t);
+    const a = Number(amount || 0);
+    if(a <= 0) continue;
+
+    const paidMe = Number(payerOut?.[member] || 0);
+    const benMe  = Number(benOut?.[member]  || 0);
+
+    // 支出（恩恵者別）
+    if(paidMe > 0){
+      const denom = a;
+      for(const b of Object.keys(benOut || {})){
+        if(!(members.includes(b) || b === ECON)) continue;
+
+        const share = paidMe * (Number(benOut[b] || 0) / denom);
+        if(share > 0){
+          expenseByBeneficiary[b] = Math.round((expenseByBeneficiary[b] || 0) + share);
+        }
+      }
+    }
+
+    // 収入（支払者別）
+    if(benMe > 0){
+      const denom = a;
+      for(const p of Object.keys(payerOut||{})){
+        if(!members.includes(p)) continue;
+        const share = Number(payerOut[p]||0) * (benMe / denom);
+        if(share > 0){
+          incomeByPayer[p] = Math.round((incomeByPayer[p]||0) + share);
+        }
+      }
+    }
+  }
+
+  return { expenseByType, incomeByType, expenseByBeneficiary, incomeByPayer };
+}
+
+function renderPieBlock(canvas, legendEl, dataMap){
+  const entries = Object.entries(dataMap || {})
     .map(([k,v])=>[k, Math.round(Number(v||0))])
     .filter(([,v])=>v>0)
     .sort((a,b)=>b[1]-a[1]);
-}
 
-function drawPie(canvas, legendEl, pairs){
-  const ctx = canvas.getContext("2d");
-  const W = canvas.width, H = canvas.height;
+  if(!canvas || !legendEl) return;
 
-  ctx.clearRect(0,0,W,H);
-
-  legendEl.innerHTML = "";
-
-  if(!pairs.length){
-    ctx.save();
-    ctx.globalAlpha = 0.85;
-    ctx.font = "16px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("データなし", W/2, H/2);
-    ctx.restore();
+  if(entries.length === 0){
+    // 空表示
+    drawEmptyPie(canvas);
+    legendEl.innerHTML = `<div class="muted small" style="padding:8px 2px;">データがありません</div>`;
     return;
   }
 
-  const total = pairs.reduce((a, [,v])=>a+v, 0);
-  const cx = W*0.36, cy = H*0.52;
-  const r  = Math.min(W,H)*0.32;
+  const colors = entries.map((_,i)=> colorByIndex(i, entries.length));
+  drawPie(canvas, entries, colors);
 
-  // 色：HSLで自動生成（固定色指定しない）
-  const colorOf = (i, n)=>{
-    const hue = (i * (360 / Math.max(1,n))) % 360;
-    return `hsl(${hue} 70% 55%)`;
-  };
+  legendEl.innerHTML = "";
+  entries.forEach(([name,val], i)=>{
+    const row = document.createElement("div");
+    row.className="lgRow";
+    row.innerHTML = `
+      <div class="lgLeft">
+        <span class="swatch" style="background:${colors[i]}"></span>
+        <span class="lgName">${escapeHtml(name)}</span>
+      </div>
+      <div class="lgVal">${yen(val)}円</div>
+    `;
+    legendEl.appendChild(row);
+  });
+}
+
+function setupHiDPICanvas(canvas){
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth || 280;
+  const cssH = canvas.clientHeight || 280;
+  canvas.width  = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return { ctx, w: cssW, h: cssH };
+}
+
+function drawEmptyPie(canvas){
+  const { ctx, w, h } = setupHiDPICanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+
+  const cx = w/2, cy = h/2;
+  const r = Math.min(w,h)*0.38;
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.fillStyle = "#121833";
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#223";
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(238,240,246,.75)";
+  ctx.font = "14px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("No data", cx, cy);
+}
+
+function drawPie(canvas, entries, colors){
+  const { ctx, w, h } = setupHiDPICanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+
+  const total = entries.reduce((a, [,v])=>a+v, 0);
+  const cx = w/2, cy = h/2;
+  const r = Math.min(w,h)*0.42;
 
   let start = -Math.PI/2;
-  pairs.forEach(([label, value], i)=>{
-    const frac = value / total;
-    const end = start + frac * Math.PI * 2;
+  entries.forEach(([_, v], i)=>{
+    const ang = (v/total) * Math.PI*2;
+    const end = start + ang;
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, r, start, end);
     ctx.closePath();
-    ctx.fillStyle = colorOf(i, pairs.length);
+    ctx.fillStyle = colors[i];
     ctx.fill();
 
-    // 外周ライン
-    ctx.strokeStyle = "rgba(0,0,0,.25)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
     start = end;
-
-    // legend
-    const row = document.createElement("div");
-    row.className = "legendRow";
-    row.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;min-width:0">
-        <span style="width:10px;height:10px;border-radius:999px;background:${colorOf(i, pairs.length)};display:inline-block;flex:0 0 auto"></span>
-        <span class="wrapText" style="min-width:0">${escapeHtml(label)}</span>
-      </div>
-      <div style="font-weight:800;white-space:nowrap">${yen(value)}円</div>
-    `;
-    legendEl.appendChild(row);
   });
 
-  // 中央テキスト
-  ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,.92)";
-  ctx.font = "800 18px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(`${yen(total)}円`, cx, cy+6);
-  ctx.restore();
+  // 枠線
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#223";
+  ctx.stroke();
+
+  // 中抜きで見やすく（ドーナツ風）
+  ctx.beginPath();
+  ctx.arc(cx, cy, r*0.55, 0, Math.PI*2);
+  ctx.fillStyle = "#0f1530";
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "#223";
+  ctx.stroke();
 }
 
-function computeMemberDetails(member){
-  const members = currentTripData?.members || [];
-  const txList = currentTripData?.tx || [];
-  const gList = currentTripData?.gamble || [];
-
-  const expenseByType = {};
-  const incomeByType  = {};
-  const expenseByBen  = {};   // ギャンブル除く：そのメンバーが支払った分の恩恵者内訳
-  const incomeByPayer = {};   // ギャンブル除く：そのメンバーが受けた恩恵の支払者内訳
-
-  // 支出（使用側）/ 収入（支払側）を取る（種類別）
-  for(const t of txList){
-    const type = t.type || "（未設定）";
-    const { payerOut, benOut } = computeTxBreakdown(t);
-
-    // そのメンバーの「使用額」＝ benOut[member]
-    if(Number(benOut?.[member]||0) > 0){
-      addToMap(expenseByType, type, benOut[member]);
-    }
-    // そのメンバーの「支払額」＝ payerOut[member]
-    if(Number(payerOut?.[member]||0) > 0){
-      addToMap(incomeByType, type, payerOut[member]);
-    }
-
-    // ③ ギャンブル除く：総支出の恩恵者ごと（＝そのメンバーが払った分を、恩恵者へ配分）
-    if(Number(payerOut?.[member]||0) > 0){
-      const paidByMember = Number(payerOut[member]||0);
-
-      // 恩恵者（自分含む、経済は除く）
-      const benPairs = Object.entries(benOut||{})
-        .filter(([b,v])=> members.includes(b) && Number(v||0)>0);
-
-      const denom = benPairs.reduce((a,[,v])=>a+Number(v||0),0);
-      if(denom > 0){
-        benPairs.forEach(([b,v])=>{
-          addToMap(expenseByBen, b, paidByMember * (Number(v||0)/denom));
-        });
-      }
-    }
-
-    // ④ ギャンブル除く：総収入の支払者ごと（＝そのメンバーが受けた恩恵を、支払者へ配分）
-    if(Number(benOut?.[member]||0) > 0){
-      const gotByMember = Number(benOut[member]||0);
-
-      const payerPairs = Object.entries(payerOut||{})
-        .filter(([p,v])=> members.includes(p) && Number(v||0)>0);
-
-      const denom = payerPairs.reduce((a,[,v])=>a+Number(v||0),0);
-      if(denom > 0){
-        payerPairs.forEach(([p,v])=>{
-          addToMap(incomeByPayer, p, gotByMember * (Number(v||0)/denom));
-        });
-      }
-    }
-  }
-
-  // ギャンブル：種類「ギャンブル」として、勝ち=収入、負け=支出
-  let gSum = 0;
-  for(const g of gList){
-    const v = Number(g?.entries?.[member] || 0);
-    if(!v) continue;
-    gSum += v;
-  }
-  if(gSum < 0) addToMap(expenseByType, "ギャンブル", Math.abs(gSum));
-  if(gSum > 0) addToMap(incomeByType,  "ギャンブル", gSum);
-
-  return {
-    expenseTypePairs: mapToSortedPairs(expenseByType),
-    incomeTypePairs:  mapToSortedPairs(incomeByType),
-    expenseByBenPairs: mapToSortedPairs(expenseByBen),
-    incomeByPayerPairs: mapToSortedPairs(incomeByPayer),
-  };
+function colorByIndex(i, n){
+  // 見やすいようにHSLを回す（固定配列より重複しにくい）
+  const hue = (i * (360 / Math.max(6, n))) % 360;
+  return `hsl(${hue} 70% 55%)`;
 }
 
-function openMemberDetailModal(member){
-  if(!currentTripData) return;
-
-  mdMemberTitle.textContent = `${member} の詳細`;
-
-  // スライダー先頭に戻す
-  mdSlider.scrollLeft = 0;
-  setActiveDot(0);
-
-  const d = computeMemberDetails(member);
-
-  drawPie(pieExpenseType, legendExpenseType, d.expenseTypePairs);
-  drawPie(pieIncomeType,  legendIncomeType,  d.incomeTypePairs);
-  drawPie(pieExpenseByBen, legendExpenseByBen, d.expenseByBenPairs);
-  drawPie(pieIncomeByPayer, legendIncomeByPayer, d.incomeByPayerPairs);
-
-  openModal(memberDetailModal);
-}
-
-function setActiveDot(idx){
-  if(!mdDots) return;
-  const dots = [...mdDots.querySelectorAll(".dot")];
-  dots.forEach((d,i)=> d.classList.toggle("active", i===idx));
-}
-function updateDotsByScroll(){
-  if(!mdSlider) return;
-  const w = mdSlider.clientWidth || 1;
-  const idx = Math.round(mdSlider.scrollLeft / w);
-  setActiveDot(Math.max(0, Math.min(3, idx)));
-}
+/* =========================
+   ここまでメンバー詳細追加
+   ========================= */
 </script>
+
+<script type="module">
+/* 2つ目のmoduleを避けるため、上のmodule末尾に追記したいが
+   元コード維持のため分割はしない。ここでは何もしない。 */
+</script>
+
+<script type="module">
+/* 互換のため空 */
+</script>
+
+<script type="module">
+/* 互換のため空 */
+</script>
+
+<script type="module">
+/* 互換のため空 */
+</script>
+
+<script type="module">
+/* 互換のため空 */
+</script>
+
+<script type="module">
+/* 互換のため空 */
+</script>
+
+<script type="module">
+/* 互換のため空 */
+</script>
+
+<!-- NOTE:
+  ここから下は、元の <script type="module"> を二重にしないために本来不要ですが、
+  あなたの貼り付け環境で自動結合などがある場合に備えて残しています。
+  （動作には影響しません）
+-->
+
 </body>
 </html>
