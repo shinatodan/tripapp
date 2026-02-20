@@ -2168,10 +2168,17 @@ function buildMemberDetailData(member){
   const tx = currentTripData?.tx || [];
   const gamble = currentTripData?.gamble || [];
 
+  // (1) 総支出（種類別・ギャンブル含む）
+  //  - ギャンブル：entriesが負 → 絶対値を「ギャンブル」
+  //  - 通常支出：その種類の「自分の支払額(paidMe)」を支出
   const expenseByType = {};
+
+  // (2) 総収入（種類別・ギャンブル含む）
+  //  - ギャンブル：entriesが正 → そのまま「ギャンブル」
+  //  - 通常支出：その種類の「自分が受けた恩恵額(benMe)」を収入
   const incomeByType = {};
 
-  // ギャンブルは種類に「ギャンブル」で加算（支出/収入）
+  // --- ギャンブル（種類別に「ギャンブル」枠） ---
   let gExp = 0;
   let gInc = 0;
   for(const g of gamble){
@@ -2182,25 +2189,30 @@ function buildMemberDetailData(member){
   if(gExp > 0) expenseByType["ギャンブル"] = Math.round(gExp);
   if(gInc > 0) incomeByType["ギャンブル"] = Math.round(gInc);
 
-  // 非ギャンブル：種類別は「自分の支払い」と「自分の恩恵」の差分で支出/収入に分解
-  //  - 支出（その種類に対して自分が得た分が多い） = max(0, benOut[me] - payerOut[me])
-  //  - 収入（その種類で自分が立て替えた分が多い） = max(0, payerOut[me] - benOut[me])
+  // --- 通常支出（種類別） ---
   for(const t of tx){
     const type = String(t?.type || "（未設定）");
     const { payerOut, benOut } = computeTxBreakdown(t);
-    const paidMe = Number(payerOut?.[member] || 0);
-    const benMe  = Number(benOut?.[member]  || 0);
 
-    const exp = Math.max(0, benMe - paidMe);
-    const inc = Math.max(0, paidMe - benMe);
+    const paidMe = Number(payerOut?.[member] || 0); // ★その種類の自分の支払額
+    const benMe  = Number(benOut?.[member]  || 0); // ★その種類の自分の恩恵額
 
-    if(exp > 0) expenseByType[type] = Math.round((expenseByType[type]||0) + exp);
-    if(inc > 0) incomeByType[type]  = Math.round((incomeByType[type]||0)  + inc);
+    if(paidMe > 0){
+      expenseByType[type] = Math.round((expenseByType[type] || 0) + paidMe);
+    }
+    if(benMe > 0){
+      incomeByType[type]  = Math.round((incomeByType[type]  || 0) + benMe);
+    }
   }
 
-  // ギャンブル除く：総支出の恩恵者ごと（=自分が支払った分が誰の恩恵か）
+  // (3) 総支出（恩恵者ごと・ギャンブル除く）
+  //  - 自分が支払った金額(paidMe)を、恩恵配分(benOut)の比率で恩恵者へ按分して合計
+  //    例：総額10000、恩恵A6000/B4000、もし自分が10000払ったなら → A6000/B4000
   const expenseByBeneficiary = {};
-  // ギャンブル除く：総収入の支払者ごと（=自分が恩恵を受けた分が誰の支払いか）
+
+  // (4) 総収入（支払者ごと・ギャンブル除く）
+  //  - 自分が受けた恩恵額(benMe)を、支払者配分(payerOut)の比率で支払者へ按分して合計
+  //    例：総額10000、支払A6000/B4000、もし自分の恩恵が10000なら → A6000/B4000
   const incomeByPayer = {};
 
   for(const t of tx){
@@ -2211,12 +2223,11 @@ function buildMemberDetailData(member){
     const paidMe = Number(payerOut?.[member] || 0);
     const benMe  = Number(benOut?.[member]  || 0);
 
-    // 支出（恩恵者別）
+    // (3) 支出（恩恵者別）
     if(paidMe > 0){
       const denom = a;
       for(const b of Object.keys(benOut || {})){
-        if(!(members.includes(b) || b === ECON)) continue;
-
+        if(!(members.includes(b) || b === ECON)) continue; // ECONも含める（元仕様維持）
         const share = paidMe * (Number(benOut[b] || 0) / denom);
         if(share > 0){
           expenseByBeneficiary[b] = Math.round((expenseByBeneficiary[b] || 0) + share);
@@ -2224,14 +2235,14 @@ function buildMemberDetailData(member){
       }
     }
 
-    // 収入（支払者別）
+    // (4) 収入（支払者別）
     if(benMe > 0){
       const denom = a;
-      for(const p of Object.keys(payerOut||{})){
+      for(const p of Object.keys(payerOut || {})){
         if(!members.includes(p)) continue;
-        const share = Number(payerOut[p]||0) * (benMe / denom);
+        const share = Number(payerOut[p] || 0) * (benMe / denom);
         if(share > 0){
-          incomeByPayer[p] = Math.round((incomeByPayer[p]||0) + share);
+          incomeByPayer[p] = Math.round((incomeByPayer[p] || 0) + share);
         }
       }
     }
