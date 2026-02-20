@@ -7,15 +7,25 @@
 <style>
   * { box-sizing: border-box; }
   :root{--gap:12px;--radius:10px}
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.4;margin:0;background:#0b1020;color:#eef0f6}
+
+  body{
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.4;margin:0;background:#0b1020;color:#eef0f6
+  }
   header{padding:16px 20px;border-bottom:1px solid #223}
   h1{font-size:20px;margin:0}
+
   .wrap{display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px}
   @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+
   .card{background:#121833;border:1px solid #1e2646;border-radius:var(--radius);padding:16px}
   .card h2{font-size:16px;margin:0 0 8px 0}
+
   label{display:block;font-size:13px;margin-top:10px;opacity:.9}
-  input,select,button,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #2a376a;background:#0f1530;color:#eef0f6;font-size:16px;}
+  input,select,button,textarea{
+    width:100%;padding:10px;border-radius:8px;border:1px solid #2a376a;
+    background:#0f1530;color:#eef0f6;font-size:16px;
+  }
   input[type="checkbox"]{width:auto;margin-right:8px}
   .row{display:flex;gap:var(--gap)}
   .row > *{flex:1}
@@ -24,6 +34,7 @@
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
   .pill.plus{background:#123d28;border:1px solid #1c6b42;color:#a9f3c8}
   .pill.minus{background:#3a1820;border:1px solid #7e3340;color:#ffc7d0}
+
   table{width:100%;border-collapse:collapse;margin-top:8px;table-layout:fixed}
   th,td{border-bottom:1px solid #223;padding:8px;text-align:left;vertical-align:top;word-wrap:break-word}
   .right{text-align:right}
@@ -31,8 +42,10 @@
   .btn{cursor:pointer}
   .btn.secondary{background:#0f1530;border-color:#2a376a}
   .btn.danger{background:#2a0f18;border-color:#6a2a3a}
+
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   @media(max-width:780px){.grid{grid-template-columns:1fr}}
+
   .small{font-size:12px}
   .editing-mode input, .editing-mode select { border-color: #4a5c9a; background: #1a2240; }
   .editing-mode #addTxBtn { background: #2a376a; border-color: #4a5c9a; }
@@ -96,7 +109,6 @@
     margin-top:10px;
     align-items:center;
   }
-  .sortbar .label{font-size:12px;opacity:.85}
   .sortbar select{
     width:auto;
     padding:8px 10px;
@@ -112,9 +124,7 @@
     background:#0f1530;
   }
   .totalNetTitle{font-size:13px;opacity:.9;font-weight:700;margin-bottom:8px}
-  .totalNetChips{
-    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
-  }
+  .totalNetChips{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
   .totalNetChips .chipline{
     display:flex; gap:8px; align-items:center;
     padding:8px 10px;
@@ -141,8 +151,48 @@
     border-radius:10px;
   }
 
+  /* テーブル横スクロール（スマホ向け） */
+  .tableWrap{
+    width:100%;
+    overflow:auto;
+    -webkit-overflow-scrolling: touch;
+    border:1px solid #223;
+    border-radius:12px;
+    background:#0f1530;
+    margin-top:10px;
+  }
+  .tableWrap table{
+    margin-top:0;
+    min-width: 680px;
+    background:transparent;
+  }
+  .tableWrap th, .tableWrap td{
+    background:transparent;
+  }
+
   /* detailsの三角を消す（見た目だけ） */
   summary::-webkit-details-marker{display:none}
+
+  /* ===== スマホ最適化 ===== */
+  @media(max-width:780px){
+    header{padding:12px 14px}
+    .wrap{padding:10px;gap:10px}
+    .card{padding:12px}
+    input,select,button,textarea{font-size:16px} /* iOSのズーム回避 */
+    .row{flex-direction:column}
+    .row > *{flex:unset}
+    .tabs{position:sticky;top:0;background:#0b1020;padding:8px 0;z-index:10}
+    .tabbtn{padding:10px 12px;font-size:14px}
+    table{table-layout:auto}
+    th,td{padding:10px}
+    .sortbar select{width:100%}
+    .thFlex{gap:6px}
+    .thFlex select{width:100%}
+    .gRow{grid-template-columns: 1fr 76px 1fr}
+    .signBtn{padding:10px 8px}
+    .totalNetChips .chipline{width:100%;justify-content:space-between}
+    .tableWrap table{min-width: 760px} /* フィルタ付き支出表は広め */
+  }
 </style>
 </head>
 <body>
@@ -210,8 +260,8 @@
 
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-              <label style="margin:0;">支払者（複数可） <span class="muted small">※空欄は均等割り</span></label>
-              <button class="btn secondary small" id="editPayerAmountsBtn" style="width:auto;padding:4px 10px">個別金額を指定</button>
+              <label style="margin:0;">支払者（複数可）</label>
+              <button class="btn secondary small" id="editPayerAmountsBtn" style="width:auto;padding:6px 10px">個別</button>
             </div>
             <div id="payers" class="chips"></div>
           </div>
@@ -219,10 +269,10 @@
 
         <div style="margin-top:10px">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-            <label style="margin:0;">サービスを受けた人 <span class="muted small">※空欄は均等割り</span></label>
+            <label style="margin:0;">サービスを受けた人</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-              <button class="btn secondary small" id="selectAllBenBtn" style="width:auto;padding:4px 10px">全員選択</button>
-              <button class="btn secondary small" id="editBenAmountsBtn" style="width:auto;padding:4px 10px">個別金額を指定</button>
+              <button class="btn secondary small" id="selectAllBenBtn" style="width:auto;padding:6px 10px">全員選択</button>
+              <button class="btn secondary small" id="editBenAmountsBtn" style="width:auto;padding:6px 10px">個別</button>
             </div>
           </div>
           <div id="beneficiaries" class="chips"></div>
@@ -230,7 +280,7 @@
 
         <div class="row" style="margin-top:10px">
           <button class="btn" id="addTxBtn">支出を追加</button>
-          <button class="btn secondary" id="clearFormBtn">入力クリア</button>
+          <button class="btn secondary" id="clearFormBtn">クリア</button>
         </div>
       </section>
     </section>
@@ -248,11 +298,11 @@
         </div>
 
         <div style="margin-top:10px" class="muted small">
-          各メンバーの金額を入力し、勝ちは「＋」負けは「−」にしてください（合計が0円になる必要があります）。
+          各メンバーの金額を入力し、勝ちは「＋」負けは「−」にしてください。
         </div>
 
         <div class="deltaBox">
-          <div>合計（＋/−）のずれ：</div>
+          <div>合計のずれ：</div>
           <div id="gDelta" style="font-weight:700;">0円</div>
         </div>
 
@@ -268,30 +318,33 @@
     <!-- 結果 -->
     <section class="card">
       <h2>結果</h2>
-      <div class="muted small" style="margin-top:-4px;">
-        「勝敗」は支出の差額のみで計算します（ギャンブル収支は下に表示、さらに総収支を表示します）。
-      </div>
 
-      <table id="resultTable">
-        <thead>
-          <tr><th>名前</th><th class="right">使用額</th><th class="right">支払額</th><th class="right">勝敗</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-
-      <div id="econTotalLine" class="muted" style="margin-top:10px;font-size:24px;font-weight:800;"></div>
-
-      <div style="margin-top:14px">
-        <div style="font-size:14px;font-weight:600;">ギャンブル結果（現在の収支）</div>
-        <table id="gambleBalanceTable">
+      <div class="tableWrap">
+        <table id="resultTable">
           <thead>
-            <tr><th>名前</th><th class="right">収支</th></tr>
+            <tr><th>名前</th><th class="right">使用額</th><th class="right">支払額</th><th class="right">勝敗</th></tr>
           </thead>
           <tbody></tbody>
         </table>
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="font-size:14px;font-weight:600;">ギャンブル結果</div>
+        <div class="tableWrap">
+          <table id="gambleBalanceTable">
+            <thead>
+              <tr><th>名前</th><th class="right">収支</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
 
         <div class="totalNetBox">
-          <div class="totalNetTitle">総収支（支出＋ギャンブル）</div>
+          <div class="totalNetTitle">総収支</div>
+
+          <!-- ★ここに「経済に回した合計」を表示（総収支の中） -->
+          <div id="econTotalLine" class="muted" style="margin:6px 0 10px 0;font-size:14px;font-weight:700;"></div>
+
           <div id="totalNetChips" class="totalNetChips"></div>
         </div>
       </div>
@@ -301,12 +354,11 @@
     <section class="card">
       <details open id="txDetails">
         <summary style="cursor:pointer;font-weight:700;list-style:none;">
-          支出一覧 <span class="muted small" style="font-weight:400;margin-left:8px;">（クリックで開閉）</span>
+          支出一覧 <span class="muted small" style="font-weight:400;margin-left:8px;">クリックで開閉</span>
         </summary>
 
-        <!-- ★ソート（プルダウン：選択したら即反映） -->
+        <!-- ソート（プルダウン：選択したら即反映） -->
         <div class="sortbar">
-          <span class="label">ソート：</span>
           <select id="txSortSelect">
             <option value="createdDesc">新しい順</option>
             <option value="createdAsc">古い順</option>
@@ -315,40 +367,42 @@
           </select>
         </div>
 
-        <table id="txTable">
-          <thead>
-            <tr>
-              <th>
-                <div class="thFlex">
-                  <span class="thTitle">種類</span>
-                  <select id="txFilterType">
-                    <option value="">全て</option>
-                  </select>
-                </div>
-              </th>
-              <th>説明</th>
-              <th class="right">金額</th>
-              <th>
-                <div class="thFlex">
-                  <span class="thTitle">支払者</span>
-                  <select id="txFilterPayer">
-                    <option value="">全て</option>
-                  </select>
-                </div>
-              </th>
-              <th>
-                <div class="thFlex">
-                  <span class="thTitle">恩恵者</span>
-                  <select id="txFilterBen">
-                    <option value="">全て</option>
-                  </select>
-                </div>
-              </th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+        <div class="tableWrap">
+          <table id="txTable">
+            <thead>
+              <tr>
+                <th>
+                  <div class="thFlex">
+                    <span class="thTitle">種類</span>
+                    <select id="txFilterType">
+                      <option value="">全て</option>
+                    </select>
+                  </div>
+                </th>
+                <th>説明</th>
+                <th class="right">金額</th>
+                <th>
+                  <div class="thFlex">
+                    <span class="thTitle">支払者</span>
+                    <select id="txFilterPayer">
+                      <option value="">全て</option>
+                    </select>
+                  </div>
+                </th>
+                <th>
+                  <div class="thFlex">
+                    <span class="thTitle">恩恵者</span>
+                    <select id="txFilterBen">
+                      <option value="">全て</option>
+                    </select>
+                  </div>
+                </th>
+                <th class="right">操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </details>
     </section>
 
@@ -356,19 +410,16 @@
     <section class="card">
       <details open id="gambleDetails">
         <summary style="cursor:pointer;font-weight:700;list-style:none;">
-          ギャンブル集計一覧 <span class="muted small" style="font-weight:400;margin-left:8px;">（クリックで開閉）</span>
+          ギャンブル集計一覧 <span class="muted small" style="font-weight:400;margin-left:8px;">クリックで開閉</span>
         </summary>
-
-        <div class="muted small" style="margin-top:6px;">
-          「誰が誰にいくら支払うか」の一覧です（編集・削除すると、ギャンブル収支に反映されます）。
+        <div class="tableWrap">
+          <table id="gambleTable">
+            <thead>
+              <tr><th>説明</th><th>支払い</th><th class="right">操作</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
-
-        <table id="gambleTable">
-          <thead>
-            <tr><th>説明</th><th>支払い（誰 → 誰 / 金額）</th><th class="right">操作</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
       </details>
     </section>
 
@@ -382,12 +433,9 @@
       <div style="font-size:16px; font-weight:600;">（恩恵者）個別金額を指定</div>
       <button class="btn secondary small" id="benModalCloseBtn" style="width:auto;">閉じる</button>
     </div>
-    <div class="muted small" style="margin-top:8px;">
-      チェックされている人だけ表示されます（「経済」も含む）。空欄は「均等割り」扱い。
-    </div>
     <div id="benModalList" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
     <div class="row" style="margin-top:12px;">
-      <button class="btn secondary" id="benModalClearBtn">入力をクリア</button>
+      <button class="btn secondary" id="benModalClearBtn">クリア</button>
       <button class="btn" id="benModalSaveBtn">反映</button>
     </div>
   </div>
@@ -400,12 +448,9 @@
       <div style="font-size:16px; font-weight:600;">（支払者）個別金額を指定</div>
       <button class="btn secondary small" id="payModalCloseBtn" style="width:auto;">閉じる</button>
     </div>
-    <div class="muted small" style="margin-top:8px;">
-      チェックされている人だけ表示されます。空欄は「均等割り」扱い。
-    </div>
     <div id="payModalList" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
     <div class="row" style="margin-top:12px;">
-      <button class="btn secondary" id="payModalClearBtn">入力をクリア</button>
+      <button class="btn secondary" id="payModalClearBtn">クリア</button>
       <button class="btn" id="payModalSaveBtn">反映</button>
     </div>
   </div>
@@ -417,16 +462,11 @@
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
       <div style="font-size:16px; font-weight:600;">ギャンブル精算結果</div>
     </div>
-
-    <div class="muted small" style="margin-top:8px;">
-      「保存して閉じる」で反映／「キャンセル」で前の画面に戻ります。
-    </div>
-
     <div id="settleList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
 
     <div class="row" style="margin-top:12px;">
       <button class="btn secondary" id="settleCancelBtn">キャンセル</button>
-      <button class="btn" id="settleSaveBtn">保存して閉じる</button>
+      <button class="btn" id="settleSaveBtn">保存</button>
     </div>
   </div>
 </div>
@@ -455,9 +495,6 @@ const ECON = "経済";
 const TX_TYPES = ["交通費","宿代","食費","物代","交際費"];
 const DEFAULT_TX_TYPE = "食費";
 
-/**
- * 端末内で覚えるキー（端末ごと）
- */
 const LS_LAST_TRIP_KEY = "tripApp:lastTripId";
 
 // ユーティリティ
@@ -472,7 +509,6 @@ function toInt(v){
 }
 function openModal(el){ el.style.display="block"; }
 function closeModal(el){ el.style.display="none"; }
-function normStr(s){ return String(s||"").trim().toLowerCase(); }
 
 // ===== DOM =====
 const newTripName=byId("newTripName");
@@ -546,6 +582,9 @@ const txFilterType = byId("txFilterType");
 const txFilterPayer = byId("txFilterPayer");
 const txFilterBen = byId("txFilterBen");
 
+// 経済表示（総収支box内）
+const econTotalLine = byId("econTotalLine");
+
 // Firestore 状態
 let tripsUnsub=null, currentTripUnsub=null;
 let tripsIndex=[], currentTripId=null, currentTripData=null;
@@ -557,9 +596,7 @@ let editingGambleId = null;
 // ギャンブル保存待ち
 let pendingGambleRecord = null;
 
-/**
- * ★全端末共通の「最後に開いた旅行」 (認証なしのため全員共通になります)
- */
+/** 全端末共通の「最後に開いた旅行」 */
 let lastTripUnsub = null;
 let remoteLastTripId = null;
 
@@ -607,7 +644,7 @@ function setTab(kind){
   tabGamble.classList.toggle("active", !isExpense);
 }
 
-// ===== ★ 最後に開いた旅行ID（Firestore）を購読 =====
+// ===== 最後に開いた旅行ID（Firestore）を購読 =====
 function subscribeLastTripState(){
   if(lastTripUnsub) lastTripUnsub();
   const ref = doc(db, "appState", "lastTrip");
@@ -718,7 +755,7 @@ function subscribeCurrentTrip(id){
     renderResults();        // 支出のみの勝敗
     renderGambleForm();
     renderGambleBalance();  // ギャンブル収支
-    renderTotalNet();       // 総収支（支出＋ギャンブル）
+    renderTotalNet();       // 総収支（支出＋ギャンブル） + 経済合計表示
     renderGambleListTable();
   });
 }
@@ -730,6 +767,7 @@ function clearMainViews(){
   if(totalNetChips) totalNetChips.innerHTML="";
   gambleTableBody.innerHTML="";
   gList.innerHTML="";
+  if(econTotalLine) econTotalLine.textContent = "";
 }
 
 // ===== メンバー表示 =====
@@ -809,7 +847,6 @@ function rebuildSelectOptions(sel, options, keepValue){
     sel.appendChild(o);
   });
 
-  // 現在値が選択肢にない場合は全てに戻す
   const exists = Array.from(sel.options).some(o=>o.value===cur);
   sel.value = exists ? cur : "";
 }
@@ -818,24 +855,19 @@ function updateTxFilterOptions(){
   const members = currentTripData?.members || [];
   const tx = currentTripData?.tx || [];
 
-  // 種類：TX_TYPES + 既存の未知タイプも拾う（念のため）
   const typeSet = new Set(TX_TYPES);
   tx.forEach(t=>{
     if(t?.type) typeSet.add(String(t.type));
   });
   const types = Array.from(typeSet).filter(Boolean);
 
-  // 支払者：メンバーのみ
   const payers = [...members];
-
-  // 恩恵者：メンバー + 経済
   const bens = [...members, ECON];
 
   rebuildSelectOptions(txFilterType, types, txFilters.type);
   rebuildSelectOptions(txFilterPayer, payers, txFilters.payer);
   rebuildSelectOptions(txFilterBen, bens, txFilters.ben);
 
-  // state反映（無効になってたら全てに）
   txFilters.type = txFilterType?.value || "";
   txFilters.payer = txFilterPayer?.value || "";
   txFilters.ben = txFilterBen?.value || "";
@@ -849,24 +881,18 @@ function applyTxFilters(list){
   const fBen = txFilters.ben || "";
 
   return list.filter(t=>{
-    // 種類
     if(fType){
       if(String(t.type||"") !== fType) return false;
     }
-
-    // 支払者（複数のうちに含まれるか）
     if(fPayer){
       const payers = (t.payers && t.payers.length) ? t.payers : (t.payer ? [t.payer] : []);
       const p2 = payers.filter(p=>members.includes(p));
       if(!p2.includes(fPayer)) return false;
     }
-
-    // 恩恵者（複数のうちに含まれるか：経済も含む）
     if(fBen){
       const ben = (t.ben || []);
       if(!ben.includes(fBen)) return false;
     }
-
     return true;
   });
 }
@@ -874,7 +900,6 @@ function applyTxFilters(list){
 function sortTxList(list, key){
   const withIdx = list.map((t,idx)=>({t, idx}));
   const num = (v)=> Number(v||0);
-
   const cmpNum = (a,b)=> (a<b?-1:a>b?1:0);
 
   const cmp = (a,b)=>{
@@ -907,10 +932,10 @@ function renderTx(){
       <td class="right">${yen(t.amount)}</td>
       <td>${payers.join(", ")}</td>
       <td>${(t.ben||[]).join(", ")}</td>
-      <td>
-        <div style="display:flex;gap:4px;justify-content:flex-end">
-           <button class="btn small secondary" data-edit="${t.id}">編集</button>
-           <button class="btn small danger" data-del="${t.id}">削除</button>
+      <td class="right">
+        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
+           <button class="btn small secondary" data-edit="${t.id}" style="width:auto">編集</button>
+           <button class="btn small danger" data-del="${t.id}" style="width:auto">削除</button>
         </div>
       </td>
     `;
@@ -985,7 +1010,6 @@ function computeExpenseStats(){
     });
   }
 
-  // 支出勝敗（支出の差額）
   const expenseNet = Object.fromEntries(members.map(m=>{
     const f=Math.round(fair[m]||0);
     const p=Math.round(paid[m]||0);
@@ -1012,9 +1036,9 @@ function renderResults(){
     resultBody.appendChild(tr);
   });
 
-  const econLine = byId("econTotalLine");
-  if(econLine){
-    econLine.innerHTML = `経済に回した合計：<span style="font-size:18px;font-weight:900;">${yen(Math.round(econTotal))}円</span>`;
+  // ★経済合計は「総収支box内」に表示
+  if(econTotalLine){
+    econTotalLine.innerHTML = `経済計：<span style="font-size:16px;font-weight:900;">${yen(Math.round(econTotal))}円</span>`;
   }
 }
 
@@ -1067,14 +1091,14 @@ function renderGambleForm(){
     const signBtn=document.createElement("button");
     signBtn.type="button";
     signBtn.className="signBtn plus";
-    signBtn.textContent="＋（勝）";
+    signBtn.textContent="＋";
     signBtn.dataset.sign="+";
     signBtn.addEventListener("click", ()=>{
       const s=signBtn.dataset.sign==="+" ? "-" : "+";
       signBtn.dataset.sign=s;
       signBtn.classList.toggle("plus", s==="+");
       signBtn.classList.toggle("minus", s==="-");
-      signBtn.textContent = (s==="+") ? "＋（勝）" : "−（負）";
+      signBtn.textContent = (s==="+") ? "＋" : "−";
       updateGambleDelta();
     });
 
@@ -1113,7 +1137,7 @@ function clearGambleForm(resetMode=false){
     gList.querySelectorAll('button.signBtn').forEach(btn=>{
       btn.dataset.sign="+";
       btn.classList.add("plus"); btn.classList.remove("minus");
-      btn.textContent="＋（勝）";
+      btn.textContent="＋";
     });
   }
   updateGambleDelta();
@@ -1170,7 +1194,7 @@ function applyEntriesToForm(entries){
     btn.dataset.sign = sign;
     btn.classList.toggle("plus", sign==="+");
     btn.classList.toggle("minus", sign==="-");
-    btn.textContent = (sign==="+") ? "＋（勝）" : "−（負）";
+    btn.textContent = (sign==="+") ? "＋" : "−";
     inp.value = abs ? String(abs) : "";
   });
   updateGambleDelta();
@@ -1198,7 +1222,7 @@ addGambleBtn?.addEventListener("click", ()=>{
     return;
   }
   if(sum!==0){
-    alert(`合計が0円ではありません（現在：${yen(sum)}円）。勝ち（＋）と負け（−）の合計が0になるように入力してください。`);
+    alert(`合計が0円ではありません（現在：${yen(sum)}円）。勝ちと負けの合計が0になるように入力してください。`);
     return;
   }
 
@@ -1329,9 +1353,9 @@ function renderGambleListTable(){
       <td>${escapeHtml(g.desc||"（無題）")}</td>
       <td>${payments}</td>
       <td class="right">
-        <div style="display:flex;gap:4px;justify-content:flex-end">
-          <button class="btn small secondary" data-gedit="${g.id}">編集</button>
-          <button class="btn small danger" data-gdel="${g.id}">削除</button>
+        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
+          <button class="btn small secondary" data-gedit="${g.id}" style="width:auto">編集</button>
+          <button class="btn small danger" data-gdel="${g.id}" style="width:auto">削除</button>
         </div>
       </td>
     `;
@@ -1454,7 +1478,6 @@ addMemberBtn.addEventListener("click", async ()=>{
   await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, members, tx, gamble, gambleBalance });
   memberName.value="";
 
-  // フィルタ選択肢更新
   updateTxFilterOptions();
   renderTx();
 });
@@ -1533,7 +1556,6 @@ addTxBtn.addEventListener("click", async ()=>{
     await updateDoc(doc(db,"trips",currentTripId),{ tx: newTxList });
     clearForm();
 
-    // 追加/更新後：フィルタ候補を更新して再描画
     updateTxFilterOptions();
     renderTx();
   } catch (e) {
@@ -1551,8 +1573,6 @@ async function deleteTx(id){
   if(editingTxId === id) clearForm();
   await updateDoc(doc(db,"trips",currentTripId),{ tx });
 
-  // 削除後：フィルタ候補を更新して再描画
-  //（snapshotで呼ばれるが、体感を良くするため）
   updateTxFilterOptions();
   renderTx();
 }
@@ -1618,7 +1638,6 @@ async function removeMember(name){
 
   await setDoc(doc(db,"trips",currentTripId),{ ...currentTripData, members, tx, gamble, gambleBalance });
 
-  // フィルタ選択肢更新（支払者/恩恵者候補が変わる）
   updateTxFilterOptions();
   renderTx();
 }
@@ -1661,7 +1680,7 @@ function makeAmountRow(name, cur){
 function openBenAmountModal(){
   const checked = [];
   beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{ if(cb.checked) checked.push(cb); });
-  if(checked.length === 0){ alert("まず『サービスを受けた人』を1人以上チェックしてください"); return; }
+  if(checked.length === 0){ alert("『サービスを受けた人』を1人以上チェックしてください"); return; }
   benModalList.innerHTML = "";
   checked.forEach(cb=> benModalList.appendChild(makeAmountRow(cb.value, cb.dataset.amount || "")));
   openModal(benModal);
@@ -1680,7 +1699,7 @@ function saveBenAmountModal(){
 function openPayerAmountModal(){
   const checked = [];
   payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb=>{ if(cb.checked) checked.push(cb); });
-  if(checked.length === 0){ alert("まず『支払者』を1人以上チェックしてください"); return; }
+  if(checked.length === 0){ alert("『支払者』を1人以上チェックしてください"); return; }
   payModalList.innerHTML = "";
   checked.forEach(cb=> payModalList.appendChild(makeAmountRow(cb.value, cb.dataset.amount || "")));
   openModal(payModal);
@@ -1718,7 +1737,7 @@ function clearForm(){
   txFormCard.classList.remove("editing-mode");
   formTitle.textContent = "支出を追加";
   addTxBtn.textContent = "支出を追加";
-  clearFormBtn.textContent = "入力クリア";
+  clearFormBtn.textContent = "クリア";
 
   if(txType) txType.value = DEFAULT_TX_TYPE;
   txDesc.value = "";
