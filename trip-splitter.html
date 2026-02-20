@@ -115,6 +115,23 @@
     flex-wrap:wrap;
     align-items:center;
   }
+  /* ===== モーダルを中でスクロールさせる（詳細結果が下で見切れない） ===== */
+  .modal{
+    overflow:auto;                 /* 念のため */
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal .panel{
+    max-height: 84vh;              /* 画面内に収める */
+    overflow-y: auto;              /* パネル内を縦スクロール */
+    overscroll-behavior: contain;  /* 末端で裏へスクロール伝播しない */
+  }
+
+  /* body固定用 */
+  body.modalOpen{
+    height: 100%;
+    overflow: hidden;              /* 裏の本画面スクロール停止 */
+    touch-action: none;
+  }
 
   /* 支出一覧ソート */
   .sortbar{
@@ -649,8 +666,33 @@ function toInt(v){
   const n = String(v).replace(/[^\d-]/g,"");
   return Number.parseInt(n,10) || 0;
 }
-function openModal(el){ el.style.display="block"; }
-function closeModal(el){ el.style.display="none"; }
+let _scrollY = 0;
+
+function openModal(el){
+  _scrollY = window.scrollY || 0;
+  document.body.classList.add("modalOpen");
+  // iOS対策：背景スクロール固定
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${_scrollY}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.width = "100%";
+
+  el.style.display="block";
+}
+
+function closeModal(el){
+  el.style.display="none";
+
+  document.body.classList.remove("modalOpen");
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+
+  window.scrollTo(0, _scrollY);
+}
 
 // DOM
 const tripPanel = byId("tripPanel");
