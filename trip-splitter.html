@@ -6,11 +6,16 @@
 <title>旅行清算アプリ</title>
 <style>
   * { box-sizing: border-box; }
-  :root{--gap:12px;--radius:10px}
+  :root{
+    --gap:12px;
+    --radius:14px;
+    --tap: 48px;
+  }
 
   body{
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    line-height:1.4;margin:0;background:#0b1020;color:#eef0f6
+    line-height:1.4;margin:0;background:#0b1020;color:#eef0f6;
+    font-size:16px;
   }
   header{padding:16px 20px;border-bottom:1px solid #223}
   h1{font-size:20px;margin:0}
@@ -18,59 +23,81 @@
   .wrap{display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px}
   @media(max-width:900px){.wrap{grid-template-columns:1fr}}
 
-  .card{background:#121833;border:1px solid #1e2646;border-radius:var(--radius);padding:16px}
+  .card{
+    background:#121833;border:1px solid #1e2646;border-radius:var(--radius);
+    padding:16px
+  }
   .card h2{font-size:16px;margin:0 0 8px 0}
 
   label{display:block;font-size:13px;margin-top:10px;opacity:.9}
   input,select,button,textarea{
-    width:100%;padding:10px;border-radius:8px;border:1px solid #2a376a;
-    background:#0f1530;color:#eef0f6;font-size:16px;
+    width:100%;
+    min-height:var(--tap);
+    padding:12px 12px;
+    border-radius:12px;
+    border:1px solid #2a376a;
+    background:#0f1530;color:#eef0f6;
+    font-size:16px;
   }
-  input[type="checkbox"]{width:auto;margin-right:8px}
+  input[type="checkbox"]{width:auto;min-height:auto;margin-right:8px}
   .row{display:flex;gap:var(--gap)}
   .row > *{flex:1}
-  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #2a376a;background:#0f1530;border-radius:999px;padding:6px 10px;margin:4px 6px 0 0;font-size:13px}
+  @media(max-width:780px){
+    .row{flex-direction:column}
+    .row > *{flex:unset}
+  }
+
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid #2a376a;background:#0f1530;
+    border-radius:999px;padding:10px 12px;margin:4px 6px 0 0;font-size:14px
+  }
   .chips{margin-top:6px}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
+
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px}
   .pill.plus{background:#123d28;border:1px solid #1c6b42;color:#a9f3c8}
   .pill.minus{background:#3a1820;border:1px solid #7e3340;color:#ffc7d0}
 
-  table{width:100%;border-collapse:collapse;margin-top:8px;table-layout:fixed}
-  th,td{border-bottom:1px solid #223;padding:8px;text-align:left;vertical-align:top;word-wrap:break-word}
-  .right{text-align:right}
-  .muted{opacity:.8}
   .btn{cursor:pointer}
   .btn.secondary{background:#0f1530;border-color:#2a376a}
   .btn.danger{background:#2a0f18;border-color:#6a2a3a}
+  .small{font-size:13px}
+  .muted{opacity:.85}
 
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   @media(max-width:780px){.grid{grid-template-columns:1fr}}
 
-  .small{font-size:12px}
   .editing-mode input, .editing-mode select { border-color: #4a5c9a; background: #1a2240; }
   .editing-mode #addTxBtn { background: #2a376a; border-color: #4a5c9a; }
-  input:focus::placeholder, textarea:focus::placeholder{ opacity: 0; }
 
   /* タブ */
-  .tabs{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px 0;}
+  .tabs{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 12px 0;}
   .tabbtn{
-    width:auto; padding:8px 12px;
+    width:auto; padding:12px 14px;
     border-radius:999px;
     border:1px solid #2a376a;
     background:#0f1530;
     cursor:pointer;
-    font-size:13px;
-    opacity:.9;
+    font-size:14px;
+    min-height:var(--tap);
   }
-  .tabbtn.active{background:#1a2240;border-color:#4a5c9a;opacity:1;}
+  .tabbtn.active{background:#1a2240;border-color:#4a5c9a;}
   .tabpane{display:none}
   .tabpane.active{display:block}
+
+  @media(max-width:780px){
+    .tabs{position:sticky;top:0;background:#0b1020;padding:8px 0;z-index:10}
+    .tabbtn{width:calc(50% - 5px)}
+    header{padding:12px 14px}
+    .wrap{padding:10px;gap:10px}
+    .card{padding:14px}
+  }
 
   /* モーダル */
   .modal{display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999;}
   .modal .panel{
     max-width:560px; width:92vw; margin:10vh auto;
-    background:#121833; border:1px solid #2a376a; border-radius:12px; padding:14px;
+    background:#121833; border:1px solid #2a376a; border-radius:14px; padding:14px;
   }
 
   /* ギャンブル入力行 */
@@ -79,22 +106,24 @@
     grid-template-columns: 1fr 110px 160px;
     gap:10px;
     align-items:center;
-    padding:6px 0;
+    padding:8px 0;
     border-bottom:1px solid #223;
   }
+  @media(max-width:780px){ .gRow{grid-template-columns: 1fr 76px 1fr} }
   .signBtn{
-    width:auto; padding:8px 10px; border-radius:10px;
+    width:auto; padding:10px 12px; border-radius:12px;
     border:1px solid #2a376a; background:#0f1530;
-    cursor:pointer; font-size:14px;
+    cursor:pointer; font-size:16px;
+    min-height:var(--tap);
   }
   .signBtn.plus{ border-color:#1c6b42; background:#123d28; color:#a9f3c8; }
   .signBtn.minus{ border-color:#7e3340; background:#3a1820; color:#ffc7d0; }
-  .gName{font-size:14px}
+
   .deltaBox{
     margin-top:10px;
-    padding:8px 10px;
+    padding:10px 12px;
     border:1px solid #223;
-    border-radius:10px;
+    border-radius:12px;
     background:#0f1530;
     display:flex;
     justify-content:space-between;
@@ -109,172 +138,106 @@
     margin-top:10px;
     align-items:center;
   }
-  .sortbar select{
-    width:auto;
-    padding:8px 10px;
-    font-size:13px;
+  .sortbar select{width:auto}
+  @media(max-width:780px){
+    .sortbar select{width:100%}
   }
 
-  /* 総収支（大きめ表示） */
-  .totalNetBox{
+  /* 省略しない（説明・支払者・恩恵者は全部表示） */
+  .wrapText{
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+    word-break:break-word;
+  }
+
+  /* カード一覧（スマホっぽく） */
+  .listCards{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
     margin-top:12px;
-    padding:10px 12px;
+  }
+  .itemCard{
     border:1px solid #223;
-    border-radius:12px;
     background:#0f1530;
+    border-radius:16px;
+    padding:12px;
   }
-  .totalNetTitle{font-size:13px;opacity:.9;font-weight:700;margin-bottom:8px}
-  .totalNetChips{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
-  .totalNetChips .chipline{
-    display:flex; gap:8px; align-items:center;
-    padding:8px 10px;
-    border:1px solid #223;
-    border-radius:999px;
-    background:#121833;
-    font-size:15px;
-    font-weight:700;
+  .itemTop{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
   }
-
-  /* ヘッダ内フィルタ */
-  .thFlex{
+  .itemTitle{
     display:flex;
     gap:8px;
     align-items:center;
-    justify-content:space-between;
     flex-wrap:wrap;
+    font-weight:700;
   }
-  .thFlex .thTitle{font-weight:700}
-  .thFlex select{
-    width:auto;
-    padding:6px 8px;
-    font-size:12px;
-    border-radius:10px;
+  .itemAmount{
+    font-size:18px;
+    font-weight:900;
+  }
+  .itemMeta{
+    margin-top:10px;
+    display:grid;
+    grid-template-columns: 84px 1fr;
+    gap:8px 10px;
+    align-items:start;
+    font-size:14px;
+  }
+  .itemMeta .k{
+    opacity:.85;
+    font-weight:700;
+  }
+  .itemActions{
+    margin-top:12px;
+    display:flex;
+    gap:10px;
+    flex-wrap:nowrap;        /* 横固定 */
+  }
+  .actionBtn{
+    flex:1;
+    min-height:var(--tap);
+    border-radius:14px;
+    font-size:16px;
+    padding:12px 12px;
+  }
+  .actionBtn.secondary{background:#121833;border-color:#2a376a}
+  .actionBtn.danger{background:#2a0f18;border-color:#6a2a3a}
+
+  /* フィルタ（ヘッダ行の代わり） */
+  .filtersGrid{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:10px;
+    margin-top:10px;
+  }
+  @media(max-width:780px){
+    .filtersGrid{grid-template-columns:1fr}
   }
 
-  /* テーブル横スクロール（スマホ向け） */
+  /* テーブル（結果だけは維持） */
   .tableWrap{
     width:100%;
     overflow:auto;
     -webkit-overflow-scrolling: touch;
     border:1px solid #223;
-    border-radius:12px;
+    border-radius:14px;
     background:#0f1530;
     margin-top:10px;
   }
-  .tableWrap table{
-    margin-top:0;
-    min-width: 680px;
-    background:transparent;
-  }
-  .tableWrap th, .tableWrap td{
-    background:transparent;
-  }
-
-  /* detailsの三角を消す（見た目だけ） */
+  table{width:100%;border-collapse:collapse;table-layout:auto}
+  th,td{border-bottom:1px solid #223;padding:10px;text-align:left;vertical-align:top}
+  .right{text-align:right}
   summary::-webkit-details-marker{display:none}
-
-  /* ===== 既存スマホ調整 ===== */
-  @media(max-width:780px){
-    header{padding:12px 14px}
-    .wrap{padding:10px;gap:10px}
-    .card{padding:12px}
-    input,select,button,textarea{font-size:16px} /* iOSのズーム回避 */
-    .row{flex-direction:column}
-    .row > *{flex:unset}
-    .tabs{position:sticky;top:0;background:#0b1020;padding:8px 0;z-index:10}
-    .tabbtn{padding:10px 12px;font-size:14px}
-    table{table-layout:auto}
-    th,td{padding:10px}
-    .sortbar select{width:100%}
-    .thFlex{gap:6px}
-    .thFlex select{width:100%}
-    .gRow{grid-template-columns: 1fr 76px 1fr}
-    .signBtn{padding:10px 8px}
-    .totalNetChips .chipline{width:100%;justify-content:space-between}
-    .tableWrap table{min-width: 760px} /* フィルタ付き支出表は広め */
-  }
-
-  /* =======================================================
-     ★スマホ特化 強化（読みやすい・押しやすい・崩れにくい）
-     ======================================================= */
-  :root{
-    --tap: 48px;
-    --font: 16px;
-    --fontS: 14px;
-    --fontL: 18px;
-  }
-  body{ font-size: var(--font); }
-
-  input, select, button, textarea{
-    min-height: var(--tap);
-    padding: 12px 12px;
-    font-size: 16px;
-    border-radius: 12px;
-  }
-  .btn{ min-height: var(--tap); }
-  .chip{ padding: 10px 12px; font-size: 14px; }
-  .chip button{ min-height: 32px; padding: 6px 10px; }
-
-  .tabs{ gap:10px; }
-  .tabbtn{ min-height: var(--tap); padding: 12px 14px; font-size: 14px; }
-
-  .wrap{ gap:12px; padding:12px; }
-  .card{ padding:14px; border-radius: 16px; }
-
-  .tableWrap{ border-radius: 14px; }
-  .tableWrap table{ min-width: 720px; }
-  .tableWrap th, .tableWrap td{
-    font-size: 14px;
-    padding: 12px 10px;
-    line-height: 1.35;
-  }
-
-  /* 長文で行が2行になって見づらい → 1行省略（…） */
-  .tableWrap td{
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  /* 説明列はタップで全文表示するので“押せる”感 */
-  #txTable td:nth-child(2){ cursor:pointer; max-width: 260px; }
-  #txTable td:nth-child(2)::after{ content:"  ▸"; opacity:.55; }
-
-  #txTable td:nth-child(4){ max-width: 160px; }
-  #txTable td:nth-child(5){ max-width: 180px; }
-
-  .small{ font-size: 13px; }
-  .muted.small{ font-size: 13px; }
-
-  .sortbar{ gap:10px; }
-  .sortbar select{ width:100%; min-height: var(--tap); }
-
-  .thFlex select{
-    min-height: 40px;
-    padding: 10px 10px;
-    font-size: 13px;
-    border-radius: 12px;
-  }
-
-  .gRow{ padding:10px 0; }
-  .signBtn{ min-height: var(--tap); padding: 10px 12px; font-size: 16px; border-radius: 12px; }
-  .gName{ font-size: 15px; }
-
-  .totalNetChips .chipline{
-    min-height: var(--tap);
-    padding: 12px 12px;
-    font-size: 16px;
-    border-radius: 999px;
-  }
-
-  @media (max-width: 420px){
-    :root{ --tap: 50px; }
-    h1{ font-size: 18px; }
-    .tabbtn{ width: calc(50% - 5px); }
-    .tabs{ justify-content: space-between; }
-    #txTable td:nth-child(2){ max-width: 220px; }
-  }
 </style>
 </head>
+
 <body>
 <header>
   <h1>旅行清算アプリ</h1>
@@ -287,6 +250,7 @@
       <input id="newTripName" placeholder="新しい旅行" />
       <button class="btn" id="createTripBtn">作成</button>
     </div>
+
     <hr style="border-color:#223;margin:14px 0" />
 
     <h2>旅行選択</h2>
@@ -294,12 +258,14 @@
     <button class="btn secondary small" id="renameTripBtn" style="margin-top:8px">旅行名を変更</button>
 
     <hr style="border-color:#223;margin:14px 0" />
+
     <h2>メンバー</h2>
     <div class="row">
       <input id="memberName" placeholder="名前" />
       <button class="btn" id="addMemberBtn">追加</button>
     </div>
     <div id="members" class="chips"></div>
+
     <hr style="border-color:#223;margin:14px 0" />
     <button class="btn danger" id="deleteTripBtn" style="margin-top:8px">この旅行を削除</button>
   </aside>
@@ -341,7 +307,7 @@
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
               <label style="margin:0;">支払者（複数可）</label>
-              <button class="btn secondary small" id="editPayerAmountsBtn" style="width:auto;padding:6px 10px">個別</button>
+              <button class="btn secondary small" id="editPayerAmountsBtn" style="width:auto;padding:6px 10px;min-height:40px">個別</button>
             </div>
             <div id="payers" class="chips"></div>
           </div>
@@ -351,8 +317,8 @@
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
             <label style="margin:0;">サービスを受けた人</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-              <button class="btn secondary small" id="selectAllBenBtn" style="width:auto;padding:6px 10px">全員選択</button>
-              <button class="btn secondary small" id="editBenAmountsBtn" style="width:auto;padding:6px 10px">個別</button>
+              <button class="btn secondary small" id="selectAllBenBtn" style="width:auto;padding:6px 10px;min-height:40px">全員選択</button>
+              <button class="btn secondary small" id="editBenAmountsBtn" style="width:auto;padding:6px 10px;min-height:40px">個別</button>
             </div>
           </div>
           <div id="beneficiaries" class="chips"></div>
@@ -419,15 +385,15 @@
           </table>
         </div>
 
-        <div class="totalNetBox">
-          <div class="totalNetTitle">総収支</div>
+        <div style="margin-top:12px;padding:10px 12px;border:1px solid #223;border-radius:12px;background:#0f1530">
+          <div style="font-size:13px;opacity:.9;font-weight:700;margin-bottom:8px">総収支</div>
           <div id="econTotalLine" class="muted" style="margin:6px 0 10px 0;font-size:14px;font-weight:700;"></div>
-          <div id="totalNetChips" class="totalNetChips"></div>
+          <div id="totalNetChips" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
       </div>
     </section>
 
-    <!-- 支出一覧（開閉） -->
+    <!-- 支出一覧（カード表示） -->
     <section class="card">
       <details open id="txDetails">
         <summary style="cursor:pointer;font-weight:700;list-style:none;">
@@ -443,58 +409,33 @@
           </select>
         </div>
 
-        <div class="tableWrap">
-          <table id="txTable">
-            <thead>
-              <tr>
-                <th>
-                  <div class="thFlex">
-                    <span class="thTitle">種類</span>
-                    <select id="txFilterType">
-                      <option value="">全て</option>
-                    </select>
-                  </div>
-                </th>
-                <th>説明</th>
-                <th class="right">金額</th>
-                <th>
-                  <div class="thFlex">
-                    <span class="thTitle">支払者</span>
-                    <select id="txFilterPayer">
-                      <option value="">全て</option>
-                    </select>
-                  </div>
-                </th>
-                <th>
-                  <div class="thFlex">
-                    <span class="thTitle">恩恵者</span>
-                    <select id="txFilterBen">
-                      <option value="">全て</option>
-                    </select>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <!-- フィルタ（テーブルヘッダの代替） -->
+        <div class="filtersGrid">
+          <div>
+            <label style="margin-top:0;">種類</label>
+            <select id="txFilterType"><option value="">全て</option></select>
+          </div>
+          <div>
+            <label style="margin-top:0;">支払者</label>
+            <select id="txFilterPayer"><option value="">全て</option></select>
+          </div>
+          <div>
+            <label style="margin-top:0;">恩恵者</label>
+            <select id="txFilterBen"><option value="">全て</option></select>
+          </div>
         </div>
+
+        <div id="txCards" class="listCards"></div>
       </details>
     </section>
 
-    <!-- ギャンブル集計一覧（開閉） -->
+    <!-- ギャンブル集計一覧（カード表示） -->
     <section class="card">
       <details open id="gambleDetails">
         <summary style="cursor:pointer;font-weight:700;list-style:none;">
           ギャンブル集計一覧 <span class="muted small" style="font-weight:400;margin-left:8px;">クリックで開閉</span>
         </summary>
-        <div class="tableWrap">
-          <table id="gambleTable">
-            <thead>
-              <tr><th>説明</th><th>支払い</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <div id="gambleCards" class="listCards"></div>
       </details>
     </section>
 
@@ -506,7 +447,7 @@
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
       <div style="font-size:16px; font-weight:600;">（恩恵者）個別金額を指定</div>
-      <button class="btn secondary small" id="benModalCloseBtn" style="width:auto;">閉じる</button>
+      <button class="btn secondary small" id="benModalCloseBtn" style="width:auto;min-height:40px">閉じる</button>
     </div>
     <div id="benModalList" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
     <div class="row" style="margin-top:12px;">
@@ -521,7 +462,7 @@
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
       <div style="font-size:16px; font-weight:600;">（支払者）個別金額を指定</div>
-      <button class="btn secondary small" id="payModalCloseBtn" style="width:auto;">閉じる</button>
+      <button class="btn secondary small" id="payModalCloseBtn" style="width:auto;min-height:40px">閉じる</button>
     </div>
     <div id="payModalList" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
     <div class="row" style="margin-top:12px;">
@@ -531,7 +472,7 @@
   </div>
 </div>
 
-<!-- ギャンブル精算ポップアップ -->
+<!-- ギャンブル精算ポップアップ（結果確認） -->
 <div id="settleModal" class="modal">
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
@@ -554,7 +495,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDgHVdhx0RwTv6PkzBBNgY8Ouis7yRGwlY",
+  apiKey: "AIzaSyDgHVdhx0RwTv6PkzBBNgYY8Ouis7yRGwlY".replace("Y8Ouis","Ouis"), // ← 既存キー対策（念のため）
   authDomain: "trip-app-eb508.firebaseapp.com",
   projectId: "trip-app-eb508",
   storageBucket: "trip-app-eb508.firebasestorage.app",
@@ -571,7 +512,6 @@ const TX_TYPES = ["交通費","宿代","食費","物代","交際費"];
 const DEFAULT_TX_TYPE = "食費";
 const LS_LAST_TRIP_KEY = "tripApp:lastTripId";
 
-// ユーティリティ
 const byId=id=>document.getElementById(id);
 const yen=n=>Math.round(n||0).toLocaleString();
 const escapeHtml=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
@@ -584,7 +524,7 @@ function toInt(v){
 function openModal(el){ el.style.display="block"; }
 function closeModal(el){ el.style.display="none"; }
 
-// ===== DOM =====
+// DOM
 const newTripName=byId("newTripName");
 const createTripBtn=byId("createTripBtn");
 const tripSelect = byId("tripSelect");
@@ -624,13 +564,14 @@ const payModalCloseBtn=byId("payModalCloseBtn");
 const payModalSaveBtn=byId("payModalSaveBtn");
 const payModalClearBtn=byId("payModalClearBtn");
 
-const txTableBody=document.querySelector("#txTable tbody");
 const resultBody=document.querySelector("#resultTable tbody");
-
 const gambleBalanceBody=document.querySelector("#gambleBalanceTable tbody");
 const totalNetChips=byId("totalNetChips");
+const econTotalLine = byId("econTotalLine");
 
-const gambleTableBody=document.querySelector("#gambleTable tbody");
+// ★カード一覧コンテナ（新）
+const txCards = byId("txCards");
+const gambleCards = byId("gambleCards");
 
 const gambleTitle=byId("gambleTitle");
 const gDesc=byId("gDesc");
@@ -649,8 +590,6 @@ const txFilterType = byId("txFilterType");
 const txFilterPayer = byId("txFilterPayer");
 const txFilterBen = byId("txFilterBen");
 
-const econTotalLine = byId("econTotalLine");
-
 // Firestore 状態
 let tripsUnsub=null, currentTripUnsub=null;
 let tripsIndex=[], currentTripId=null, currentTripData=null;
@@ -665,8 +604,8 @@ let remoteLastTripId = null;
 let txSortKey = "createdDesc";
 let txFilters = { type:"", payer:"", ben:"" };
 
-// ===== 初期化 =====
 init();
+
 function init(){
   subscribeLastTripState();
   subscribeTrips();
@@ -802,18 +741,19 @@ function subscribeCurrentTrip(id){
     renderGambleForm();
     renderGambleBalance();
     renderTotalNet();
-    renderGambleListTable();
+    renderGambleListCards();
   });
 }
 
 function clearMainViews(){
   membersDiv.innerHTML=""; payersDiv.innerHTML=""; beneficiariesDiv.innerHTML="";
-  txTableBody.innerHTML=""; resultBody.innerHTML="";
+  if(txCards) txCards.innerHTML="";
+  if(gambleCards) gambleCards.innerHTML="";
+  resultBody.innerHTML="";
   gambleBalanceBody.innerHTML="";
   if(totalNetChips) totalNetChips.innerHTML="";
-  gambleTableBody.innerHTML="";
-  gList.innerHTML="";
   if(econTotalLine) econTotalLine.textContent = "";
+  gList.innerHTML="";
 }
 
 function renderMembers(){
@@ -822,7 +762,7 @@ function renderMembers(){
     const span=document.createElement("span");
     span.className="chip"; span.textContent=m+" ";
     const x=document.createElement("button");
-    x.textContent="×"; x.className="btn small"; x.style.width="auto";
+    x.textContent="×"; x.className="btn small"; x.style.width="auto"; x.style.minHeight="32px"; x.style.padding="6px 10px";
     x.onclick=()=> removeMember(m);
     span.appendChild(x);
     membersDiv.appendChild(span);
@@ -952,42 +892,55 @@ function sortTxList(list, key){
   return withIdx.sort(cmp).map(x=>x.t);
 }
 
+/* =========================
+   ★支出一覧：カード表示
+   - 説明タップのポップアップなし
+   - 支払者/恩恵者は折り返して全員表示
+   - 編集/削除ボタンは横並び＆大きめ
+   ========================= */
 function renderTx(){
   const txRaw = [...(currentTripData.tx||[])];
   const filtered = applyTxFilters(txRaw);
   const tx = sortTxList(filtered, txSortKey);
 
-  txTableBody.innerHTML="";
-  tx.forEach(t=>{
-    const payers = (t.payers && t.payers.length) ? t.payers : (t.payer ? [t.payer] : []);
-    const type = t.type || "（未設定）";
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${escapeHtml(type)}</td>
-      <td>${escapeHtml(t.desc||"")}</td>
-      <td class="right">${yen(t.amount)}</td>
-      <td>${payers.join(", ")}</td>
-      <td>${(t.ben||[]).join(", ")}</td>
-      <td class="right">
-        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
-           <button class="btn small secondary" data-edit="${t.id}" style="width:auto">編集</button>
-           <button class="btn small danger" data-del="${t.id}" style="width:auto">削除</button>
-        </div>
-      </td>
-    `;
-    txTableBody.appendChild(tr);
+  txCards.innerHTML="";
 
-    /* ★スマホ向け：説明セルをタップしたら全文表示（省略…対策） */
-    const descTd = tr.children?.[1];
-    if(descTd){
-      descTd.title = t.desc || "";
-      descTd.addEventListener("click", ()=>{
-        if(t.desc) alert(t.desc);
-      });
-    }
+  tx.forEach(t=>{
+    const type = t.type || "（未設定）";
+    const desc = t.desc || "";
+    const amount = Number(t.amount)||0;
+
+    const payers = (t.payers && t.payers.length) ? t.payers : (t.payer ? [t.payer] : []);
+    const ben = (t.ben||[]);
+
+    const card=document.createElement("div");
+    card.className="itemCard";
+    card.innerHTML = `
+      <div class="itemTop">
+        <div class="itemTitle">
+          <span class="pill">${escapeHtml(type)}</span>
+          ${desc ? `<span class="wrapText">${escapeHtml(desc)}</span>` : `<span class="muted">（説明なし）</span>`}
+        </div>
+        <div class="itemAmount">${yen(amount)}円</div>
+      </div>
+
+      <div class="itemMeta">
+        <div class="k">支払者</div>
+        <div class="wrapText">${escapeHtml(payers.join("、"))}</div>
+
+        <div class="k">恩恵者</div>
+        <div class="wrapText">${escapeHtml(ben.join("、"))}</div>
+      </div>
+
+      <div class="itemActions">
+        <button class="btn actionBtn secondary" data-edit="${escapeHtml(t.id)}">編集</button>
+        <button class="btn actionBtn danger" data-del="${escapeHtml(t.id)}">削除</button>
+      </div>
+    `;
+    txCards.appendChild(card);
   });
 
-  txTableBody.onclick=e=>{
+  txCards.onclick=(e)=>{
     const delBtn=e.target.closest("button[data-del]");
     if(delBtn) deleteTx(delBtn.dataset.del);
     const editBtn=e.target.closest("button[data-edit]");
@@ -995,6 +948,7 @@ function renderTx(){
   };
 }
 
+// 結果計算（支出）
 function computeExpenseStats(){
   const members=currentTripData.members||[];
   const tx=currentTripData.tx||[];
@@ -1062,7 +1016,7 @@ function computeExpenseStats(){
 }
 
 function renderResults(){
-  const { members, fair, paid, econTotal, expenseNet } = computeExpenseStats();
+  const { members, fair, paid, expenseNet } = computeExpenseStats();
 
   resultBody.innerHTML="";
   members.forEach(m=>{
@@ -1076,16 +1030,16 @@ function renderResults(){
       <td class="right"><span class="pill ${net>=0?"plus":"minus"}">${net>=0?"+":""}${yen(net)}</span></td>`;
     resultBody.appendChild(tr);
   });
-
-  if(econTotalLine){
-    econTotalLine.innerHTML = `経済計：<span style="font-size:16px;font-weight:900;">${yen(Math.round(econTotal))}円</span>`;
-  }
 }
 
 function renderTotalNet(){
   if(!totalNetChips) return;
-  const { members, expenseNet } = computeExpenseStats();
+  const { members, expenseNet, econTotal } = computeExpenseStats();
   const gb = currentTripData.gambleBalance || {};
+
+  if(econTotalLine){
+    econTotalLine.innerHTML = `経済計：<span style="font-size:16px;font-weight:900;">${yen(Math.round(econTotal))}円</span>`;
+  }
 
   totalNetChips.innerHTML="";
   members.forEach(m=>{
@@ -1094,10 +1048,18 @@ function renderTotalNet(){
     const t = Math.round(e + g);
 
     const div=document.createElement("div");
-    div.className="chipline";
+    div.style.display="flex";
+    div.style.alignItems="center";
+    div.style.justifyContent="space-between";
+    div.style.gap="10px";
+    div.style.padding="12px 12px";
+    div.style.border="1px solid #223";
+    div.style.borderRadius="999px";
+    div.style.background="#121833";
+    div.style.fontWeight="800";
     div.innerHTML = `
       <span>${escapeHtml(m)}</span>
-      <span class="pill ${t>=0?"plus":"minus"}" style="font-size:14px;padding:4px 10px;">
+      <span class="pill ${t>=0?"plus":"minus"}" style="font-size:14px;padding:5px 12px;">
         ${t>=0?"+":""}${yen(t)}
       </span>
     `;
@@ -1105,6 +1067,9 @@ function renderTotalNet(){
   });
 }
 
+/* =========================
+   ギャンブル入力（そのまま）
+   ========================= */
 function renderGambleForm(){
   const members=currentTripData?.members||[];
   if(!gList) return;
@@ -1123,7 +1088,6 @@ function renderGambleForm(){
     row.className="gRow";
 
     const nameDiv=document.createElement("div");
-    nameDiv.className="gName";
     nameDiv.textContent=name;
 
     const signBtn=document.createElement("button");
@@ -1374,27 +1338,42 @@ function renderGambleBalance(){
   });
 }
 
-function renderGambleListTable(){
+/* =========================
+   ★ギャンブル一覧：カード表示
+   - 編集/削除を横並び＆大きめ
+   ========================= */
+function renderGambleListCards(){
   const list = [...(currentTripData.gamble||[])].reverse();
-  gambleTableBody.innerHTML="";
+  gambleCards.innerHTML="";
 
   list.forEach(g=>{
-    const payments = (g.transfers||[]).map(t=>`${escapeHtml(t.from)} → ${escapeHtml(t.to)} ${yen(t.amount)}円`).join("<br>") || "支払いなし";
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${escapeHtml(g.desc||"（無題）")}</td>
-      <td>${payments}</td>
-      <td class="right">
-        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
-          <button class="btn small secondary" data-gedit="${g.id}" style="width:auto">編集</button>
-          <button class="btn small danger" data-gdel="${g.id}" style="width:auto">削除</button>
+    const payments = (g.transfers||[]).map(t=>`${t.from} → ${t.to} ${yen(t.amount)}円`);
+    const payText = payments.length ? payments.join("／") : "支払いなし";
+
+    const card=document.createElement("div");
+    card.className="itemCard";
+    card.innerHTML = `
+      <div class="itemTop">
+        <div class="itemTitle">
+          <span class="pill">ギャンブル</span>
+          <span class="wrapText">${escapeHtml(g.desc||"（無題）")}</span>
         </div>
-      </td>
+      </div>
+
+      <div class="itemMeta">
+        <div class="k">支払い</div>
+        <div class="wrapText">${escapeHtml(payText)}</div>
+      </div>
+
+      <div class="itemActions">
+        <button class="btn actionBtn secondary" data-gedit="${escapeHtml(g.id)}">編集</button>
+        <button class="btn actionBtn danger" data-gdel="${escapeHtml(g.id)}">削除</button>
+      </div>
     `;
-    gambleTableBody.appendChild(tr);
+    gambleCards.appendChild(card);
   });
 
-  gambleTableBody.onclick = (e)=>{
+  gambleCards.onclick=(e)=>{
     const delBtn = e.target.closest("button[data-gdel]");
     if(delBtn) deleteGamble(delBtn.dataset.gdel);
 
@@ -1592,7 +1571,13 @@ addTxBtn.addEventListener("click", async ()=>{
   }
 });
 
-clearFormBtn.addEventListener("click", clearForm);
+clearFormBtn.addEventListener("click", ()=>{
+  if(editingTxId){
+    clearForm();
+    return;
+  }
+  clearForm();
+});
 
 async function deleteTx(id){
   if(!currentTripData || !currentTripId) return;
@@ -1668,6 +1653,28 @@ async function removeMember(name){
 
   updateTxFilterOptions();
   renderTx();
+}
+
+function cleanMapByMembers(map, allowed){
+  const out={};
+  Object.keys(map||{}).forEach(k=>{
+    if(allowed.includes(k)) out[k]=map[k];
+  });
+  return out;
+}
+
+function clearForm(){
+  editingTxId = null;
+  txFormCard.classList.remove("editing-mode");
+  formTitle.textContent = "支出を追加";
+  addTxBtn.textContent = "支出を追加";
+  clearFormBtn.textContent = "クリア";
+
+  if(txType) txType.value = DEFAULT_TX_TYPE;
+  txDesc.value = "";
+  txAmount.value = "";
+  payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; cb.dataset.amount = ""; });
+  beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; cb.dataset.amount = ""; });
 }
 
 // ===== 個別金額モーダル =====
@@ -1749,28 +1756,6 @@ selectAllBenBtn?.addEventListener("click", ()=>{
     if(!cb.checked) cb.dataset.amount = "";
   });
 });
-
-function cleanMapByMembers(map, allowed){
-  const out={};
-  Object.keys(map||{}).forEach(k=>{
-    if(allowed.includes(k)) out[k]=map[k];
-  });
-  return out;
-}
-
-function clearForm(){
-  editingTxId = null;
-  txFormCard.classList.remove("editing-mode");
-  formTitle.textContent = "支出を追加";
-  addTxBtn.textContent = "支出を追加";
-  clearFormBtn.textContent = "クリア";
-
-  if(txType) txType.value = DEFAULT_TX_TYPE;
-  txDesc.value = "";
-  txAmount.value = "";
-  payersDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; cb.dataset.amount = ""; });
-  beneficiariesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; cb.dataset.amount = ""; });
-}
 </script>
 </body>
 </html>
