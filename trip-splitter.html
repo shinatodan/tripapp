@@ -375,7 +375,7 @@
 
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-              <label style="margin:0;">支払者（複数可）</label>
+              <label style="margin:0;">支払者</label>
               <button class="btn secondary small" id="editPayerAmountsBtn" style="width:auto;padding:6px 10px;min-height:40px">個別</button>
             </div>
             <div id="payers" class="chips"></div>
@@ -408,16 +408,11 @@
         <div class="grid">
           <div>
             <label for="gDesc">説明</label>
-            <input id="gDesc" placeholder="例：麻雀1回目 / ルーレット など" />
+            <input id="gDesc" placeholder="例：チンチロ / ビンゴ など" />
           </div>
         </div>
-
-        <div style="margin-top:10px" class="muted small">
-          各メンバーの金額を入力し、勝ちは「＋」負けは「−」にしてください。
-        </div>
-
         <div class="deltaBox">
-          <div>合計のずれ：</div>
+          <div>ズレ</div>
           <div id="gDelta" style="font-weight:700;">0円</div>
         </div>
 
@@ -425,7 +420,7 @@
 
         <div class="row" style="margin-top:12px">
           <button class="btn" id="addGambleBtn">精算結果を追加</button>
-          <button class="btn secondary" id="clearGambleBtn">入力クリア</button>
+          <button class="btn secondary" id="clearGambleBtn">クリア</button>
         </div>
       </section>
     </section>
@@ -565,7 +560,7 @@
 
     <div class="kv">
       <div>
-        <div style="font-weight:700;margin:8px 0 6px 0;">支払者：個別支払額</div>
+        <div style="font-weight:700;margin:8px 0 6px 0;">個別支払額</div>
         <table class="miniTable">
           <thead><tr><th>名前</th><th class="right">円</th></tr></thead>
           <tbody id="txPayBreakdownBody"></tbody>
@@ -573,16 +568,12 @@
       </div>
 
       <div>
-        <div style="font-weight:700;margin:8px 0 6px 0;">恩恵者：個別恩恵額</div>
+        <div style="font-weight:700;margin:8px 0 6px 0;">個別恩恵額</div>
         <table class="miniTable">
           <thead><tr><th>名前</th><th class="right">円</th></tr></thead>
           <tbody id="txBenBreakdownBody"></tbody>
         </table>
       </div>
-    </div>
-
-    <div class="muted small" style="margin-top:10px;">
-      ※「個別」が未指定の人は、残額を均等割りした結果です。
     </div>
   </div>
 </div>
@@ -597,25 +588,25 @@
 
     <div class="carousel" id="mdCarousel">
       <div class="slide">
-        <h3>総支出（種類別・ギャンブル含む）</h3>
+        <h3>総支出（種類別）</h3>
         <div class="chartWrap"><canvas class="pie" id="pieExpType"></canvas></div>
         <div class="legend" id="lgExpType"></div>
       </div>
 
       <div class="slide">
-        <h3>総収入（種類別・ギャンブル含む）</h3>
+        <h3>総収入（種類別）</h3>
         <div class="chartWrap"><canvas class="pie" id="pieIncType"></canvas></div>
         <div class="legend" id="lgIncType"></div>
       </div>
 
       <div class="slide">
-        <h3>総支出（恩恵者ごと・ギャンブル除く）</h3>
+        <h3>総支出（人別）</h3>
         <div class="chartWrap"><canvas class="pie" id="pieExpBen"></canvas></div>
         <div class="legend" id="lgExpBen"></div>
       </div>
 
       <div class="slide">
-        <h3>総収入（支払者ごと・ギャンブル除く）</h3>
+        <h3>総収入（人別）</h3>
         <div class="chartWrap"><canvas class="pie" id="pieIncPayer"></canvas></div>
         <div class="legend" id="lgIncPayer"></div>
       </div>
@@ -1359,7 +1350,7 @@ function renderTotalNet(){
   const gb = currentTripData.gambleBalance || {};
 
   if(econTotalLine){
-    econTotalLine.innerHTML = `経済計：<span style="font-size:16px;font-weight:900;">${yen(Math.round(econTotal))}円</span>`;
+    econTotalLine.innerHTML = `経済を回した金額：<span style="font-size:16px;font-weight:900;">${yen(Math.round(econTotal))}円</span>`;
   }
 
   totalNetChips.innerHTML="";
@@ -1458,7 +1449,7 @@ function setGambleEditMode(on){
   }else{
     gambleTitle.textContent = "ギャンブル精算";
     addGambleBtn.textContent = "精算結果を追加";
-    clearGambleBtn.textContent = "入力クリア";
+    clearGambleBtn.textContent = "クリア";
   }
 }
 
@@ -1855,9 +1846,9 @@ addTxBtn.addEventListener("click", async ()=>{
   if(ben.length===0){ alert("恩恵者を1人以上選んでください"); return; }
 
   const sumP = Object.values(payerAmounts).reduce((a,b)=>a+(Number(b)||0),0);
-  if(sumP > amount){ alert("（支払者）個別金額の合計が、支出金額を超えています。"); return; }
+  if(sumP > amount){ alert("個別金額の合計が、支出金額を超えています。"); return; }
   const sumB = Object.values(benAmounts).reduce((a,b)=>a+(Number(b)||0),0);
-  if(sumB > amount){ alert("（恩恵者）個別金額の合計が、支出金額を超えています。"); return; }
+  if(sumB > amount){ alert("個別金額の合計が、支出金額を超えています。"); return; }
 
   let newTxList = [...(currentTripData.tx||[])];
 
