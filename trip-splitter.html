@@ -6,11 +6,34 @@
 <title>旅行清算アプリ</title>
 <style>
   * { box-sizing: border-box; }
-  :root{--gap:12px;--radius:14px;--tap:48px}
+
+  :root{
+    --gap:12px;
+    --radius:14px;
+    --tap:48px;
+
+    /* 追加：見分けやすさ用 */
+    --bg:#0b1020;
+    --card:#121833;
+    --field:#0c1330;        /* 入力欄の面 */
+    --field2:#0a1128;       /* さらに沈める */
+    --stroke:#223;
+    --stroke2:#2a376a;
+
+    --text:#eef0f6;
+    --muted:rgba(238,240,246,.82);
+
+    --primary:#3b82f6;      /* ボタンの主色 */
+    --primary2:#2563eb;
+    --danger:#ef4444;
+    --danger2:#dc2626;
+
+    --ring:rgba(59,130,246,.55);
+  }
 
   body{
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    line-height:1.4;margin:0;background:#0b1020;color:#eef0f6;
+    line-height:1.4;margin:0;background:var(--bg);color:var(--text);
     font-size:16px;
   }
   header{padding:16px 20px;border-bottom:1px solid #223}
@@ -19,31 +42,118 @@
   .wrap{display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px}
   @media(max-width:900px){.wrap{grid-template-columns:1fr}}
 
-  .card{background:#121833;border:1px solid #1e2646;border-radius:var(--radius);padding:16px}
+  .card{background:var(--card);border:1px solid var(--stroke2);border-radius:var(--radius);padding:16px}
   .card h2{font-size:16px;margin:0 0 8px 0}
 
-  label{display:block;font-size:13px;margin-top:10px;opacity:.9}
-  input,select,button,textarea{
-    width:100%;min-height:var(--tap);
-    padding:12px 12px;border-radius:12px;border:1px solid #2a376a;
-    background:#0f1530;color:#eef0f6;font-size:16px;
+  /* ===== ラベル（見やすく） ===== */
+  label{
+    display:block;
+    font-size:13px;
+    margin-top:10px;
+    opacity:1;
+    color:var(--muted);
+    font-weight:700;
   }
-  input[type="checkbox"]{width:auto;min-height:auto;margin-right:8px}
+
+  /* ===== 入力系（input/select/textarea） ===== */
+  input,select,textarea{
+    width:100%;
+    min-height:var(--tap);
+    padding:12px 12px;
+    border-radius:12px;
+    border:1px solid #2b3a78;
+    background:linear-gradient(180deg, var(--field), var(--field2));
+    color:var(--text);
+    font-size:16px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.06),
+      inset 0 -1px 0 rgba(0,0,0,.35);
+  }
+  input::placeholder, textarea::placeholder{ color: rgba(238,240,246,.45); }
+
+  input:focus, select:focus, textarea:focus{
+    outline:none;
+    border-color: rgba(59,130,246,.9);
+    box-shadow:
+      0 0 0 4px var(--ring),
+      inset 0 1px 0 rgba(255,255,255,.06),
+      inset 0 -1px 0 rgba(0,0,0,.35);
+  }
+
+  input[type="checkbox"]{width:auto;min-height:auto;margin-right:8px;box-shadow:none}
+
+  /* 説明入力のplaceholderはフォーカスで消す */
+  input:focus::placeholder, textarea:focus::placeholder { opacity: 0; }
+
   .row{display:flex;gap:var(--gap)}
   .row > *{flex:1}
   @media(max-width:780px){.row{flex-direction:column}.row>*{flex:unset}}
 
-  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #2a376a;background:#0f1530;border-radius:999px;padding:10px 12px;margin:4px 6px 0 0;font-size:14px}
-  .chips{margin-top:6px}
-  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px}
-  .pill.plus{background:#123d28;border:1px solid #1c6b42;color:#a9f3c8}
-  .pill.minus{background:#3a1820;border:1px solid #7e3340;color:#ffc7d0}
+  /* ===== ボタン系（button / .btn） ===== */
+  button{
+    width:auto;
+    min-height:var(--tap);
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid rgba(59,130,246,.55);
+    color:var(--text);
+    background:linear-gradient(180deg, rgba(59,130,246,.95), rgba(37,99,235,.95));
+    font-size:16px;
+    font-weight:900;
+    cursor:pointer;
+    box-shadow:
+      0 10px 24px rgba(0,0,0,.35),
+      0 2px 0 rgba(0,0,0,.25),
+      inset 0 1px 0 rgba(255,255,255,.18);
+    transform: translateY(0);
+    transition: transform .06s ease, filter .12s ease, box-shadow .12s ease;
+  }
+  button:hover{ filter: brightness(1.05); }
+  button:active{
+    transform: translateY(1px);
+    box-shadow:
+      0 6px 16px rgba(0,0,0,.32),
+      0 1px 0 rgba(0,0,0,.25),
+      inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  button:focus{
+    outline:none;
+    box-shadow:
+      0 0 0 4px var(--ring),
+      0 10px 24px rgba(0,0,0,.35),
+      0 2px 0 rgba(0,0,0,.25),
+      inset 0 1px 0 rgba(255,255,255,.18);
+  }
 
   .btn{cursor:pointer}
-  .btn.secondary{background:#0f1530;border-color:#2a376a}
-  .btn.danger{background:#2a0f18;border-color:#6a2a3a}
-  .small{font-size:13px}
+  .btn.secondary, button.secondary{
+    border-color: rgba(148,163,184,.35);
+    background: linear-gradient(180deg, rgba(30,41,59,.95), rgba(15,23,42,.95));
+    box-shadow:
+      0 10px 22px rgba(0,0,0,.30),
+      0 2px 0 rgba(0,0,0,.22),
+      inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .btn.danger, button.danger{
+    border-color: rgba(239,68,68,.55);
+    background:linear-gradient(180deg, rgba(239,68,68,.95), rgba(220,38,38,.95));
+  }
+
+  .small{font-size:13px; font-weight:800;}
   .muted{opacity:.85}
+
+  /* ===== チップ ===== */
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid rgba(148,163,184,.22);
+    background: rgba(15,23,42,.75);
+    border-radius:999px;padding:10px 12px;margin:4px 6px 0 0;font-size:14px
+  }
+  .chips{margin-top:6px}
+
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px}
+  .pill.plus{background: rgba(16,185,129,.18); border:1px solid rgba(16,185,129,.45); color:#bff7dd}
+  .pill.minus{background: rgba(244,63,94,.18); border:1px solid rgba(244,63,94,.45); color:#ffd1da}
 
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   @media(max-width:780px){.grid{grid-template-columns:1fr}}
@@ -51,37 +161,41 @@
   .editing-mode input, .editing-mode select { border-color: #4a5c9a; background: #1a2240; }
   .editing-mode #addTxBtn { background: #2a376a; border-color: #4a5c9a; }
 
-  /* 説明入力のplaceholderはフォーカスで消す */
-  input:focus::placeholder, textarea:focus::placeholder { opacity: 0; }
-
   /* タブ */
   .tabs{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 12px 0;}
   .tabbtn{
     width:auto; padding:12px 14px;
     border-radius:999px;
-    border:1px solid #2a376a;
-    background:#0f1530;
+    border:1px solid rgba(148,163,184,.28);
+    background: linear-gradient(180deg, rgba(30,41,59,.7), rgba(15,23,42,.7));
     cursor:pointer;
     font-size:14px;
     min-height:var(--tap);
+    font-weight:900;
   }
-  .tabbtn.active{background:#1a2240;border-color:#4a5c9a;}
+  .tabbtn.active{
+    border-color: rgba(59,130,246,.75);
+    background: linear-gradient(180deg, rgba(59,130,246,.95), rgba(37,99,235,.95));
+    box-shadow: 0 10px 22px rgba(0,0,0,.30);
+  }
   .tabpane{display:none}
   .tabpane.active{display:block}
 
   @media(max-width:780px){
-    .tabs{position:sticky;top:0;background:#0b1020;padding:8px 0;z-index:10}
+    .tabs{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:10}
     .tabbtn{width:calc(50% - 5px)}
     header{padding:12px 14px}
     .wrap{padding:10px;gap:10px}
     .card{padding:14px}
   }
 
+  hr{ border-color: var(--stroke); }
+
   /* モーダル */
   .modal{display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999;}
   .modal .panel{
     max-width:560px; width:92vw; margin:10vh auto;
-    background:#121833; border:1px solid #2a376a; border-radius:14px; padding:14px;
+    background:var(--card); border:1px solid var(--stroke2); border-radius:14px; padding:14px;
   }
 
   /* ギャンブル入力行 */
@@ -94,11 +208,13 @@
     border-bottom:1px solid #223;
   }
   @media(max-width:780px){ .gRow{grid-template-columns: 1fr 76px 1fr} }
+
   .signBtn{
     width:auto; padding:10px 12px; border-radius:12px;
     border:1px solid #2a376a; background:#0f1530;
     cursor:pointer; font-size:16px;
     min-height:var(--tap);
+    font-weight:900;
   }
   .signBtn.plus{ border-color:#1c6b42; background:#123d28; color:#a9f3c8; }
   .signBtn.minus{ border-color:#7e3340; background:#3a1820; color:#ffc7d0; }
@@ -115,21 +231,22 @@
     flex-wrap:wrap;
     align-items:center;
   }
+
   /* ===== モーダルを中でスクロールさせる（詳細結果が下で見切れない） ===== */
   .modal{
-    overflow:auto;                 /* 念のため */
+    overflow:auto;
     -webkit-overflow-scrolling: touch;
   }
   .modal .panel{
-    max-height: 84vh;              /* 画面内に収める */
-    overflow-y: auto;              /* パネル内を縦スクロール */
-    overscroll-behavior: contain;  /* 末端で裏へスクロール伝播しない */
+    max-height: 84vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   /* body固定用 */
   body.modalOpen{
     height: 100%;
-    overflow: hidden;              /* 裏の本画面スクロール停止 */
+    overflow: hidden;
     touch-action: none;
   }
 
@@ -154,14 +271,31 @@
   .actionBtn{flex:1;min-height:var(--tap);border-radius:14px;font-size:16px;padding:12px 12px}
   .actionBtn.secondary{background:#121833;border-color:#2a376a}
   .actionBtn.danger{background:#2a0f18;border-color:#6a2a3a}
-  .descTap{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .descTap{
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    color: rgba(147,197,253,.95);
+  }
+  .descTap:hover{ filter: brightness(1.08); }
 
   .filtersGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
   @media(max-width:780px){.filtersGrid{grid-template-columns:1fr}}
 
-  .tableWrap{width:100%;overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid #223;border-radius:14px;background:#0f1530;margin-top:10px}
+  .tableWrap{
+    width:100%;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    border:1px solid rgba(148,163,184,.22);
+    border-radius:14px;
+    background: rgba(15,23,42,.75);
+    margin-top:10px
+  }
   table{width:100%;border-collapse:collapse;table-layout:auto}
-  th,td{border-bottom:1px solid #223;padding:10px;text-align:left;vertical-align:top}
+  th,td{
+    border-bottom:1px solid rgba(148,163,184,.18);
+    padding:10px;text-align:left;vertical-align:top
+  }
   .right{text-align:right}
   summary::-webkit-details-marker{display:none}
 
@@ -246,14 +380,14 @@
   .slide h3{margin:0 0 10px 0;font-size:14px}
   .chartWrap{
     display:flex;
-    justify-content:center; /* ★中央寄せ */
+    justify-content:center;
     align-items:center;
     width:100%;
     padding:6px 0 10px 0;
   }
   canvas.pie{
     display:block;
-    margin:0 auto; /* ★中央寄せ */
+    margin:0 auto;
     width:280px;
     height:280px;
     max-width:80vw;
@@ -288,6 +422,15 @@
   }
   .dot.active{background:#4a5c9a}
   .navBtn{width:auto; min-height:40px; padding:8px 12px}
+
+  /* ===== 追加：総収支の行（押せる感） ===== */
+  #totalNetChips > div{
+    transition: transform .08s ease, filter .12s ease;
+  }
+  #totalNetChips > div:hover{
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+  }
 </style>
 </head>
 
@@ -662,28 +805,24 @@ let _scrollY = 0;
 function openModal(el){
   _scrollY = window.scrollY || 0;
   document.body.classList.add("modalOpen");
-  // iOS対策：背景スクロール固定
   document.body.style.position = "fixed";
   document.body.style.top = `-${_scrollY}px`;
   document.body.style.left = "0";
   document.body.style.right = "0";
   document.body.style.width = "100%";
-
   el.style.display="block";
 }
-
 function closeModal(el){
   el.style.display="none";
-
   document.body.classList.remove("modalOpen");
   document.body.style.position = "";
   document.body.style.top = "";
   document.body.style.left = "";
   document.body.style.right = "";
   document.body.style.width = "";
-
   window.scrollTo(0, _scrollY);
 }
+
 
 // DOM
 const tripPanel = byId("tripPanel");
