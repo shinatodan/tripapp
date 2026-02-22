@@ -633,12 +633,30 @@
       </details>
     </section>
 
+    
     <!-- ギャンブル集計一覧（カード） -->
     <section class="card">
       <details open id="gambleDetails">
         <summary style="cursor:pointer;font-weight:700;list-style:none;">
           ギャンブル集計一覧 <span class="muted small" style="font-weight:400;margin-left:8px;">クリックで開閉</span>
         </summary>
+
+        <!-- ★追加：勝ち/負け 絞り込み（検索なし） -->
+        <div class="filtersGrid" style="grid-template-columns:1fr 1fr; margin-top:10px;">
+          <div>
+            <label style="margin-top:0;">勝ちの人</label>
+            <select id="gambleFilterWinMember">
+              <option value="">全て</option>
+            </select>
+          </div>
+          <div>
+            <label style="margin-top:0;">負けの人</label>
+            <select id="gambleFilterLoseMember">
+              <option value="">全て</option>
+            </select>
+          </div>
+        </div>
+
         <div id="gambleCards" class="listCards"></div>
       </details>
     </section>
@@ -875,6 +893,8 @@ const econTotalLine = byId("econTotalLine");
 
 const txCards = byId("txCards");
 const gambleCards = byId("gambleCards");
+const gambleFilterWinMember = byId("gambleFilterWinMember");
+const gambleFilterLoseMember = byId("gambleFilterLoseMember");
 
 const gambleTitle=byId("gambleTitle");
 const gDesc=byId("gDesc");
@@ -937,6 +957,7 @@ let remoteLastTripId = null;
 
 let txSortKey = "createdDesc";
 let txFilters = { type:"", payer:"", ben:"" };
+let gambleFilters = { win:"", lose:"" };
 
 // ===== ★追加：パネル折りたたみ初期化（デフォルト閉じる） =====
 initPanel();
@@ -983,6 +1004,16 @@ function init(){
 
   // ★追加：詳細モーダルのスライド操作
   initMemberDetailCarousel();
+
+    // ★追加：ギャンブル集計一覧フィルタ
+  gambleFilterWinMember?.addEventListener("change", ()=>{
+    gambleFilters.win = gambleFilterWinMember.value || "";
+    renderGambleListCards();
+  });
+  gambleFilterLoseMember?.addEventListener("change", ()=>{
+    gambleFilters.lose = gambleFilterLoseMember.value || "";
+    renderGambleListCards();
+  });
 }
 
 function bindTabs(){
@@ -1116,6 +1147,7 @@ function subscribeCurrentTrip(id){
     renderGambleForm();
     renderGambleBalance();
     renderTotalNet();
+    updateGambleWinLoseFilterOptions();
     renderGambleListCards();
   });
 }
@@ -1205,6 +1237,51 @@ function rebuildSelectOptions(sel, options, keepValue){
 
   const exists = Array.from(sel.options).some(o=>o.value===cur);
   sel.value = exists ? cur : "";
+}
+
+function updateGambleWinLoseFilterOptions(){
+  if(!gambleFilterWinMember || !gambleFilterLoseMember) return;
+  if(!currentTripData) return;
+
+  const members = currentTripData.members || [];
+  const gamble  = currentTripData.gamble  || [];
+
+  const winSet = new Set();
+  const loseSet = new Set();
+
+  gamble.forEach(g=>{
+    members.forEach(m=>{
+      const v = Number(g?.entries?.[m] || 0);
+      if(v > 0) winSet.add(m);
+      if(v < 0) loseSet.add(m);
+    });
+  });
+
+  const prevWin = gambleFilters.win || "";
+  const prevLose = gambleFilters.lose || "";
+
+  // 勝ち
+  gambleFilterWinMember.innerHTML = `<option value="">全て</option>`;
+  Array.from(winSet).sort().forEach(m=>{
+    const o=document.createElement("option");
+    o.value=m; o.textContent=m;
+    gambleFilterWinMember.appendChild(o);
+  });
+
+  // 負け
+  gambleFilterLoseMember.innerHTML = `<option value="">全て</option>`;
+  Array.from(loseSet).sort().forEach(m=>{
+    const o=document.createElement("option");
+    o.value=m; o.textContent=m;
+    gambleFilterLoseMember.appendChild(o);
+  });
+
+  // 以前の選択がまだ有効なら保持、無効なら全てに戻す
+  gambleFilterWinMember.value = Array.from(gambleFilterWinMember.options).some(o=>o.value===prevWin) ? prevWin : "";
+  gambleFilterLoseMember.value = Array.from(gambleFilterLoseMember.options).some(o=>o.value===prevLose) ? prevLose : "";
+
+  gambleFilters.win  = gambleFilterWinMember.value || "";
+  gambleFilters.lose = gambleFilterLoseMember.value || "";
 }
 
 function updateTxFilterOptions(){
@@ -1799,7 +1876,27 @@ function renderGambleBalance(){
 }
 
 function renderGambleListCards(){
-  const list = [...(currentTripData.gamble||[])].reverse();
+  if(!currentTripData) return;
+
+  const win = gambleFilters.win || "";
+  const lose = gambleFilters.lose || "";
+
+  // 逆順表示（新しいのが上）
+  let list = [...(currentTripData.gamble||[])].reverse();
+
+  // ★勝ち/負け 絞り込み
+  list = list.filter(g=>{
+    if(win){
+      const v = Number(g?.entries?.[win] || 0);
+      if(v <= 0) return false;
+    }
+    if(lose){
+      const v = Number(g?.entries?.[lose] || 0);
+      if(v >= 0) return false;
+    }
+    return true;
+  });
+
   gambleCards.innerHTML="";
 
   list.forEach(g=>{
