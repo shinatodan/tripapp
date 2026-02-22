@@ -570,7 +570,7 @@
 
     <!-- 結果 -->
     <section class="card">
-      <h2>結果</h2>
+      <h2>支払い結果</h2>
 
       <div class="tableWrap">
         <table id="resultTable">
@@ -591,7 +591,7 @@
         </div>
 
         <div style="margin-top:12px;padding:10px 12px;border:1px solid #223;border-radius:12px;background:#0f1530">
-          <div style="font-size:13px;opacity:.9;font-weight:700;margin-bottom:8px">総収支</div>
+          <div style="font-size:14px;font-weight:600;">総収支</div>
           <div id="econTotalLine" class="muted" style="margin:6px 0 10px 0;font-size:14px;font-weight:700;"></div>
           <div id="totalNetChips" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
@@ -1543,6 +1543,22 @@ function computeExpenseStats(){
   return { members, fair, paid, econTotal, expenseNet };
 }
 
+function computeGamblePaid(){
+  const members = currentTripData?.members || [];
+  const gamble  = currentTripData?.gamble || [];
+  const out = Object.fromEntries(members.map(m=>[m,0]));
+
+  for(const g of gamble){
+    for(const m of members){
+      const v = Number(g?.entries?.[m] || 0);
+      if(v < 0) out[m] += (-v); // 負け分（支払った額）
+    }
+  }
+  // 端数が出ない想定だが念のため
+  members.forEach(m => out[m] = Math.round(out[m] || 0));
+  return out;
+}
+
 function renderResults(){
   const { members, fair, paid, expenseNet } = computeExpenseStats();
 
@@ -1562,22 +1578,30 @@ function renderResults(){
 
 function renderTotalNet(){
   if(!totalNetChips) return;
-  const { members, expenseNet, econTotal } = computeExpenseStats();
+
+  const { members, expenseNet, econTotal, paid } = computeExpenseStats();
   const gb = currentTripData.gambleBalance || {};
+  const gamblePaid = computeGamblePaid(); // ★追加
 
   if(econTotalLine){
     econTotalLine.innerHTML = `経済を回した金額：<span style="font-size:16px;font-weight:900;">${yen(Math.round(econTotal))}円</span>`;
   }
 
   totalNetChips.innerHTML="";
+
   members.forEach(m=>{
     const g = Math.round(Number(gb[m]||0));
     const e = Math.round(Number(expenseNet[m]||0));
-    const t = Math.round(e + g);
+    const t = Math.round(e + g); // 収支（既存）
+
+    // ★追加：旅行での支払額（ギャンブル負け分も含む）
+    const payNormal = Math.round(Number(paid?.[m] || 0));
+    const payGamble = Math.round(Number(gamblePaid?.[m] || 0));
+    const payTotal  = Math.round(payNormal + payGamble);
 
     const div=document.createElement("div");
-    div.dataset.member = m;               // ★追加：クリック対象
-    div.style.cursor = "pointer";         // ★追加：押せる感
+    div.dataset.member = m;
+    div.style.cursor = "pointer";
     div.style.display="flex";
     div.style.alignItems="center";
     div.style.justifyContent="space-between";
@@ -1587,16 +1611,24 @@ function renderTotalNet(){
     div.style.borderRadius="999px";
     div.style.background="#121833";
     div.style.fontWeight="800";
+
+    // 右側を「収支 + 支払額」にする（支払額は右隣）
     div.innerHTML = `
       <span>${escapeHtml(m)}</span>
-      <span class="pill ${t>=0?"plus":"minus"}" style="font-size:14px;padding:5px 12px;">
-        ${t>=0?"+":""}${yen(t)}
+      <span style="display:flex;align-items:center;gap:10px;flex:0 0 auto;">
+        <span class="pill ${t>=0?"plus":"minus"}" style="font-size:14px;padding:5px 12px;">
+          ${t>=0?"+":""}${yen(t)}
+        </span>
+        <span class="muted small" style="white-space:nowrap;">
+          支払：<span style="font-weight:900;opacity:1;">${yen(payTotal)}円</span>
+        </span>
       </span>
     `;
+
     totalNetChips.appendChild(div);
   });
 
-  // ★追加：クリックで詳細モーダル
+  // ★既存：クリックで詳細モーダル
   totalNetChips.onclick = (e)=>{
     const row = e.target.closest("[data-member]");
     if(!row) return;
